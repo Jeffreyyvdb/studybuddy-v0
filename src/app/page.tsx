@@ -1,42 +1,45 @@
 "use client";
 
-import { ModeToggle } from "@/components/ui/mode-toggle";
 import { useChat } from "@ai-sdk/react";
+import { FormEvent, useState } from "react";
+import { sampleMessages } from "@/lib/sample-messages";
+import { ChatHeader } from "@/components/chat/chat-header";
+import { MessageList } from "@/components/chat/message-list";
+import { ChatInput } from "@/components/chat/chat-input";
 
 export default function Chat() {
-  const { messages, input, handleInputChange, handleSubmit } = useChat();
+  // For normal operation with AI
+  const {
+    messages: aiMessages,
+    input,
+    handleInputChange,
+    handleSubmit,
+  } = useChat();
+
+  // For debugging with sample messages
+  const [debugMode, setDebugMode] = useState(true);
+  const messages = debugMode ? sampleMessages : aiMessages;
+
+  const onSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    if (!input.trim()) return;
+
+    // Only call handleSubmit if not in debug mode
+    if (!debugMode) {
+      handleSubmit(e);
+    }
+  };
+
   return (
-    <div className="flex items-center justify-between w-full max-w-md p-4 mx-auto">
-      <ModeToggle />
-
-      <div className="flex flex-col w-full max-w-md py-24 mx-auto stretch">
-        {messages.map((message) => (
-          <div key={message.id} className="whitespace-pre-wrap">
-            {message.role === "user" ? "User: " : "AI: "}
-            {message.parts.map((part, i) => {
-              switch (part.type) {
-                case "text":
-                  return <div key={`${message.id}-${i}`}>{part.text}</div>;
-                case "tool-invocation":
-                  return (
-                    <pre key={`${message.id}-${i}`}>
-                      {JSON.stringify(part.toolInvocation, null, 2)}
-                    </pre>
-                  );
-              }
-            })}
-          </div>
-        ))}
-
-        <form onSubmit={handleSubmit}>
-          <input
-            className="fixed dark:bg-zinc-900 bottom-0 w-full max-w-md p-2 mb-8 border border-zinc-300 dark:border-zinc-800 rounded shadow-xl"
-            value={input}
-            placeholder="Say something..."
-            onChange={handleInputChange}
-          />
-        </form>
-      </div>
+    <div className="flex flex-col h-full">
+      <ChatHeader debugMode={debugMode} setDebugMode={setDebugMode} />
+      <MessageList messages={messages} />
+      <ChatInput
+        input={input}
+        handleInputChange={handleInputChange}
+        onSubmit={onSubmit}
+      />
     </div>
   );
 }
