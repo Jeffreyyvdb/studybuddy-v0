@@ -2,7 +2,18 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
-First, run the development server:
+First, set up your environment variables:
+
+1. Create a `.env.local` file in the root directory
+2. Add the following environment variables:
+
+```bash
+# Azure OpenAI Service variables
+AZURE_OPENAI_API_URL="your_azure_openai_api_url" # Something like : https://{your-resource}.cognitiveservices.azure.com/openai/deployments/
+AZURE_API_KEY=your_azure_api_key
+```
+
+Then, run the development server:
 
 ```bash
 npm run dev
