@@ -81,7 +81,7 @@ export default function SortGame() {
     }
   ];
 
-  const [selectedSet] = useState<string>("ancient");
+  const [selectedSet, setSelectedSet] = useState<string>("ancient");
   const [events, setEvents] = useState<HistoricalEvent[]>([]);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [showYears, setShowYears] = useState<boolean>(false);
@@ -101,8 +101,10 @@ export default function SortGame() {
   );
 
   useEffect(() => {
+    // Only initialize the game on first render
     startNewGame(selectedSet);
-  });
+    // Empty dependency array ensures this effect runs only once on mount
+  }, []);
 
   const startNewGame = (setId: string) => {
     const currentSet = eventSets.find((set) => set.id === setId);
