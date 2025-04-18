@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { Trophy, RotateCcw } from "lucide-react"
+import { Trophy } from "lucide-react"
 
 type CardType = {
   id: number
