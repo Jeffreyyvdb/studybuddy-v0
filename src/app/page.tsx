@@ -2,12 +2,11 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { MoveRight } from "lucide-react";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
 
 export default function Home() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-background">
-      <div className="container flex flex-col items-center px-4 py-12 md:py-24 space-y-8 max-w-lg">
+    <div className="flex flex-col items-center justify-center h-[100dvh] overflow-hidden bg-background">
+      <div className="container flex flex-col items-center px-4 py-6 space-y-6 max-w-md">
         {/* Logo or badge */}
         <div className="rounded-full bg-primary/10 p-3 text-primary">
           <svg
@@ -26,24 +25,26 @@ export default function Home() {
         </div>
 
         {/* Hero title */}
-        <h1 className="text-5xl md:text-6xl font-bold text-center tracking-tight">
+        <h1 className="text-4xl md:text-5xl font-bold text-center tracking-tight">
           Study Buddy
         </h1>
 
-        <p className="text-muted-foreground text-center text-lg max-w-[42rem]">
+        <p className="text-muted-foreground text-center text-base max-w-xs">
           Your AI-powered study assistant. Get homework help, exam prep, and
           learning support anytime.
         </p>
 
-        {/* Robot image in card */}
-        <Image
-          src="/images/study-buddy.png"
-          alt="StudyBuddy Robot"
-          width={1024}
-          height={1024}
-          className="object-contain"
-          priority
-        />
+        {/* Robot image - reduced size */}
+        <div className="w-48 h-48 relative">
+          <Image
+            src="/images/study-buddy.png"
+            alt="StudyBuddy Robot"
+            fill
+            className="object-contain"
+            priority
+          />
+        </div>
+
         <Link href="/chat" className="w-full max-w-xs">
           <Button size="lg" className="w-full gap-2 font-medium">
             Get Started

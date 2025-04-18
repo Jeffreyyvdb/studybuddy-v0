@@ -32,7 +32,7 @@ export default function Chat() {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full pb-16">
       <ChatHeader debugMode={debugMode} setDebugMode={setDebugMode} />
       <MessageList messages={messages} />
       <ChatInput

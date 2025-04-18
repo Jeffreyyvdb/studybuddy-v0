@@ -35,7 +35,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <div className="pb-16 max-w-screen-lg mx-auto  px-4">{children}</div>
+          <div className="max-w-screen-lg mx-auto  px-4">{children}</div>
           <BottomNavigation />
         </ThemeProvider>
       </body>
