@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { getTokenOrRefresh } from "@/lib/speech-token";
 import * as speechsdk from "microsoft-cognitiveservices-speech-sdk";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,8 @@ export function SpeechToText({ className }: SpeechToTextProps) {
     audioDestination?: speechsdk.SpeakerAudioDestination;
     muted: boolean;
   }>({ muted: false });
+  const [recognizer, setRecognizer] =
+    useState<speechsdk.SpeechRecognizer | null>(null);
 
   async function sttFromMic() {
     try {
@@ -37,28 +39,84 @@ export function SpeechToText({ className }: SpeechToTextProps) {
       speechConfig.speechRecognitionLanguage = "en-US";
 
       const audioConfig = speechsdk.AudioConfig.fromDefaultMicrophoneInput();
-      const recognizer = new speechsdk.SpeechRecognizer(
+      const recognizerInstance = new speechsdk.SpeechRecognizer(
         speechConfig,
         audioConfig
       );
 
-      recognizer.recognizeOnceAsync((result) => {
-        setIsListening(false);
+      // Fix the event handlers for real-time transcription
+      recognizerInstance.recognized = (s, e) => {
+        if (e.result.reason === speechsdk.ResultReason.RecognizedSpeech) {
+          // Only add the final recognized text if it's not empty
+          if (e.result.text.trim()) {
+            setDisplayText((prev) => {
+              // Remove any interim results first
+              const finalText = prev
+                .split("\n")
+                .filter((line) => !line.endsWith("..."))
+                .join("\n");
 
-        if (result.reason === speechsdk.ResultReason.RecognizedSpeech) {
-          setDisplayText(`RECOGNIZED: ${result.text}`);
-        } else {
-          setDisplayText(
-            "ERROR: Speech was cancelled or could not be recognized. Ensure your microphone is working properly."
-          );
+              // Add the new final result
+              return `${finalText}\n${e.result.text}`;
+            });
+          }
         }
-      });
+      };
+
+      recognizerInstance.recognizing = (s, e) => {
+        // This shows interim results while the user is speaking
+        if (e.result.reason === speechsdk.ResultReason.RecognizingSpeech) {
+          setDisplayText((prev) => {
+            // Remove any previous interim results (keeping only final results)
+            const finalText = prev
+              .split("\n")
+              .filter((line) => !line.endsWith("..."))
+              .join("\n");
+
+            // Add the new interim result with "..." marker
+            return `${finalText}\n${e.result.text}...`;
+          });
+        }
+      };
+
+      recognizerInstance.canceled = (s, e) => {
+        setIsListening(false);
+        if (e.reason === speechsdk.CancellationReason.Error) {
+          setDisplayText((prev) => `${prev}\nERROR: ${e.errorDetails}`);
+        }
+        recognizerInstance.stopContinuousRecognitionAsync();
+      };
+
+      recognizerInstance.sessionStopped = (s, e) => {
+        setIsListening(false);
+        recognizerInstance.stopContinuousRecognitionAsync();
+      };
+
+      // Clear any previous text and start listening
+      setDisplayText("Listening...");
+
+      // Start continuous recognition
+      recognizerInstance.startContinuousRecognitionAsync(
+        () => {
+          // Success callback
+          setRecognizer(recognizerInstance); // Store the recognizer
+        },
+        (error) => {
+          console.error(error);
+          setIsListening(false);
+          setDisplayText("ERROR: Could not start speech recognition.");
+        }
+      );
+
+      // Add a stop button functionality
+      return recognizerInstance; // Store this in a state if you want to stop recognition later
     } catch (error) {
       console.error(error);
       setIsListening(false);
       setDisplayText(
         "ERROR: Could not connect to speech service. Please check your configuration."
       );
+      return null;
     }
   }
 
@@ -174,6 +232,20 @@ export function SpeechToText({ className }: SpeechToTextProps) {
     }
   }
 
+  function stopRecognition() {
+    if (recognizer) {
+      recognizer.stopContinuousRecognitionAsync(
+        () => {
+          setIsListening(false);
+          setRecognizer(null);
+        },
+        (error) => {
+          console.error("Error stopping recognition:", error);
+        }
+      );
+    }
+  }
+
   return (
     <div className={`speech-container ${className}`}>
       <Card className="p-6">
@@ -182,12 +254,13 @@ export function SpeechToText({ className }: SpeechToTextProps) {
         <div className="grid gap-4">
           <div className="flex flex-col gap-2">
             <Button
-              onClick={sttFromMic}
-              disabled={isListening}
+              onClick={isListening ? stopRecognition : sttFromMic}
               className="flex items-center gap-2"
             >
-              <span className="material-icons">mic</span>
-              Convert Speech to Text
+              <span className="material-icons">
+                {isListening ? "stop" : "mic"}
+              </span>
+              {isListening ? "Stop Listening" : "Convert Speech to Text"}
             </Button>
 
             <div className="flex items-center gap-2">
