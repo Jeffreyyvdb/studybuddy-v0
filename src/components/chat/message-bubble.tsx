@@ -1,7 +1,7 @@
-import { ChatMessage, MessagePart } from "@/types/chat";
+import { UIMessage } from "ai";
 
 interface MessageBubbleProps {
-  message: ChatMessage;
+  message: UIMessage;
 }
 
 export function MessageBubble({ message }: MessageBubbleProps) {
@@ -13,7 +13,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
           : "bg-muted max-w-[80%]"
       }`}
     >
-      {message.parts.map((part: MessagePart, i) => {
+      {message.parts.map((part, i) => {
         switch (part.type) {
           case "text":
             return <div key={i}>{part.text}</div>;

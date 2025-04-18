@@ -100,18 +100,31 @@ export const sampleMessages: UIMessage[] = [
       {
         type: "tool-invocation",
         toolInvocation: {
-          id: "tool-call-1",
-          name: "calculator",
           state: "call",
+          step: 0,
+          toolName: "calculator",
           args: {
             operation: "calculate",
             expression: "(15 * 3) + (27 / 3)",
           },
+          toolCallId: "call_calculator_example",
         },
       },
       {
         type: "text",
         text: "The result of this calculation would be 54.",
+      },
+    ],
+    toolInvocations: [
+      {
+        state: "call",
+        step: 0,
+        toolName: "calculator",
+        args: {
+          operation: "calculate",
+          expression: "(15 * 3) + (27 / 3)",
+        },
+        toolCallId: "call_calculator_example",
       },
     ],
   },
