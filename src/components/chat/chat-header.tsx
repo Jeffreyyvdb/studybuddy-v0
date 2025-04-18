@@ -1,6 +1,5 @@
 "use client";
 
-import { ModeToggle } from "@/components/ui/mode-toggle";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
