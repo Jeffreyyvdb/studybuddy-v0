@@ -87,7 +87,7 @@ export function SpeechToText({ className }: SpeechToTextProps) {
         recognizerInstance.stopContinuousRecognitionAsync();
       };
 
-      recognizerInstance.sessionStopped = (s, e) => {
+      recognizerInstance.sessionStopped = () => {
         setIsListening(false);
         recognizerInstance.stopContinuousRecognitionAsync();
       };

@@ -4,7 +4,6 @@ import { NextResponse } from "next/server";
 export async function POST(req: Request) {
   const { audioData } = await req.json();
   const subscriptionKey = process.env.AZURE_API_KEY;
-  const region = process.env.AZURE_REGION;
   const speechApiUrl = `${process.env.AZURE_COGNITIVE_SERVICE_ENDPOINT}`;
   const response = await fetch(speechApiUrl, {
     method: "POST",
