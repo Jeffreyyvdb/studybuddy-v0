@@ -19,6 +19,12 @@ Next install the dependencies:
 
 ```bash
 npm install
+# or
+yarn install
+# or
+pnpm install
+# or
+bun install
 ```
 
 Then, run the development server:
