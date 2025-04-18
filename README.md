@@ -11,6 +11,8 @@ First, set up your environment variables:
 # Azure OpenAI Service variables
 AZURE_OPENAI_API_URL="your_azure_openai_api_url" # Something like : https://{your-resource}.cognitiveservices.azure.com/openai/deployments/
 AZURE_API_KEY=your_azure_api_key
+AZURE_COGNITIVE_SERVICE_ENDPOINT="https://{your-resource}.cognitiveservices.azure.com/"
+AZURE_REGION="swedencentral"
 ```
 
 Then, run the development server:
