@@ -17,7 +17,7 @@ export default function Chat() {
   } = useChat();
 
   // For debugging with sample messages
-  const [debugMode, setDebugMode] = useState(true);
+  const [debugMode, setDebugMode] = useState(false);
   const messages = debugMode ? sampleMessages : aiMessages;
 
   const onSubmit = (e: FormEvent<HTMLFormElement>) => {

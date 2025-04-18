@@ -15,6 +15,12 @@ AZURE_COGNITIVE_SERVICE_ENDPOINT="https://{your-resource}.cognitiveservices.azur
 AZURE_REGION="swedencentral"
 ```
 
+Next install the dependencies:
+
+```bash
+npm install
+```
+
 Then, run the development server:
 
 ```bash
