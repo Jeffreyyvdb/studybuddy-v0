@@ -81,7 +81,7 @@ export default function SortGame() {
     }
   ];
 
-  const [selectedSet, setSelectedSet] = useState<string>("ancient");
+  const [selectedSet] = useState<string>("ancient");
   const [events, setEvents] = useState<HistoricalEvent[]>([]);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [showYears, setShowYears] = useState<boolean>(false);
