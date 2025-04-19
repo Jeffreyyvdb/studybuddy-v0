@@ -27,9 +27,9 @@ export function SortableItem({ id, children }: SortableItemProps) {
         <div
           {...attributes}
           {...listeners}
-          className="flex items-center justify-center px-2 bg-gray-100 dark:bg-gray-800/40 rounded-l-lg border-y border-l border-gray-200 dark:border-gray-700 cursor-grab active:cursor-grabbing"
+          className="flex items-center justify-center px-2 bg-muted rounded-l-lg border-y border-l border cursor-grab active:cursor-grabbing"
         >
-          <GripVertical className="h-6 w-6 text-gray-600 dark:text-gray-400" />
+          <GripVertical className="h-6 w-6 text-muted-foreground" />
         </div>
 
         {/* Content */}

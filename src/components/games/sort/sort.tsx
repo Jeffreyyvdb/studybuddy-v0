@@ -177,21 +177,21 @@ export default function SortGame() {
           <div className="space-y-2">
             {events.map((event, index) => (
               <SortableItem key={event.id} id={event.id}>
-                <div className="relative pl-4 pr-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-r-lg border border-gray-200 dark:border-gray-600 shadow-sm">
+                <div className="relative pl-4 pr-4 py-3 bg-card text-card-foreground rounded-r-lg border border-border shadow-sm">
                   <div className="flex items-center gap-3">
-                    <div className="flex items-center justify-center w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 text-xs font-bold">
+                    <div className="flex items-center justify-center w-6 h-6 rounded-full bg-muted text-muted-foreground text-xs font-bold">
                       {index + 1}
                     </div>
                     <div>
-                      <h3 className="font-bold text-gray-900 dark:text-gray-200">
+                      <h3 className="font-bold text-foreground">
                         {event.title}
                         {showYears && (
-                          <span className="ml-2 text-sm font-normal text-gray-600 dark:text-gray-400">
+                          <span className="ml-2 text-sm font-normal text-muted-foreground">
                             ({formatYear(event.year)})
                           </span>
                         )}
                       </h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                      <p className="text-sm text-muted-foreground mt-1">
                         {event.description}
                       </p>
                     </div>
@@ -207,14 +207,14 @@ export default function SortGame() {
         <div
           className={`mb-4 p-3 rounded-lg flex items-center ${
             isCorrect
-              ? "bg-gray-100 dark:bg-gray-800/30 text-gray-800 dark:text-gray-200"
-              : "bg-gray-100 dark:bg-gray-800/30 text-gray-800 dark:text-gray-200"
+              ? "bg-secondary text-secondary-foreground"
+              : "bg-destructive/10 text-destructive-foreground"
           }`}
         >
           {isCorrect ? (
-            <CheckCircle2 className="h-5 w-5 mr-2 text-gray-600 dark:text-gray-400" />
+            <CheckCircle2 className="h-5 w-5 mr-2 text-secondary-foreground" />
           ) : (
-            <XCircle className="h-5 w-5 mr-2 text-gray-600 dark:text-gray-400" />
+            <XCircle className="h-5 w-5 mr-2 text-destructive" />
           )}
           <span>
             {isCorrect
@@ -235,7 +235,7 @@ export default function SortGame() {
         ) : (
           <Button
             onClick={handleReset}
-            className="bg-gray-600 hover:bg-gray-700 text-white"
+            variant="secondary"
           >
             Next Round
             <ChevronRight className="ml-1 h-4 w-4" />
