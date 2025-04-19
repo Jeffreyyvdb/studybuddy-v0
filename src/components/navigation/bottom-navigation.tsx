@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import { NavItem } from "./nav-item";
 import { User, Bot, Home } from "lucide-react";
+import { ModeToggle } from "../ui/mode-toggle";
 
 const navItems = [
   {
@@ -39,6 +40,7 @@ export function BottomNavigation() {
             />
           ))}
         </ul>
+        <ModeToggle />
       </nav>
     </div>
   );
