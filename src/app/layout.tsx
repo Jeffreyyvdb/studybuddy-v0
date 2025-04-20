@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ui/theme-provider";
 import { BottomNavigation } from "@/components/navigation/bottom-navigation";
+import Link from "next/link";
+import { TopBar } from "@/components/top-bar/top-bar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,6 +37,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <TopBar />
           <div className="max-w-screen-lg mx-auto  px-4">{children}</div>
           <BottomNavigation />
         </ThemeProvider>
