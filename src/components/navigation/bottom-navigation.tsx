@@ -2,14 +2,14 @@
 
 import { usePathname } from "next/navigation";
 import { NavItem } from "./nav-item";
-import { User, Bot, Home } from "lucide-react";
+import { User, Bot, GraduationCap } from "lucide-react";
 import { ModeToggle } from "../ui/mode-toggle";
 
 const navItems = [
   {
-    href: "/",
-    label: "Home",
-    icon: <Home className="h-5 w-5"> </Home>,
+    href: "/learn",
+    label: "Learn",
+    icon: <GraduationCap className="h-5 w-5"> </GraduationCap>,
   },
   {
     href: "/chat",
