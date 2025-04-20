@@ -1,5 +1,6 @@
 import { QuizData, QuizQuestion } from "@/data/quizzes";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useUI } from "./ui-context";
 
 export type QuizState = "selection" | "intro" | "quiz" | "results";
 
@@ -15,6 +16,23 @@ export function useQuiz({ quizzes, feedbackDelay = 1500 }: UseQuizOptions) {
   const [selectedAnswer, setSelectedAnswer] = useState("");
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [showFeedback, setShowFeedback] = useState(false);
+
+  // Get UI context functions to control navigation bars
+  const { hideNavBars, showNavBars } = useUI();
+
+  // Control navigation bars visibility based on quiz state
+  useEffect(() => {
+    if (quizState === "quiz") {
+      // Hide navigation bars when in quiz mode
+      hideNavBars();
+    } else {
+      // Show navigation bars for selection, intro, and results
+      showNavBars();
+    }
+
+    // Always ensure nav bars are shown when component unmounts
+    return () => showNavBars();
+  }, [quizState, hideNavBars, showNavBars]);
 
   const selectedQuiz = selectedQuizId
     ? quizzes.find((quiz) => quiz.id === selectedQuizId)

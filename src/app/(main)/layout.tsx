@@ -1,5 +1,7 @@
 import { BottomNavigation } from "@/components/navigation/bottom-navigation";
 import { TopBar } from "@/components/top-bar/top-bar";
+import { UIProvider } from "@/lib/ui-context";
+import { LayoutContent } from "@/components/ui/layout-content";
 
 export default function RootLayout({
   children,
@@ -7,11 +9,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <>
+    <UIProvider>
       <TopBar />
-      {/* top margin to account for the top bar & bottom margin for the bottom navigation */}
-      <div className="mt-16 mb-16">{children}</div>
+      <LayoutContent>{children}</LayoutContent>
       <BottomNavigation />
-    </>
+    </UIProvider>
   );
 }

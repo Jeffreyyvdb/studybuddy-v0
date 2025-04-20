@@ -10,7 +10,7 @@ interface ChatHeaderProps {
 
 export function ChatHeader({ debugMode, setDebugMode }: ChatHeaderProps) {
   return (
-    <div className="sticky top-16 z-10 bg-background border-b p-4 flex justify-between items-center">
+    <div className="sticky top-0 z-10 bg-background border-b p-4 flex justify-between items-center">
       <h1 className="text-xl font-semibold">Chat</h1>
 
       <div className="flex items-center space-x-2">
