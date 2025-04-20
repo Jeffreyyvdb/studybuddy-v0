@@ -5,7 +5,7 @@ import { MoveRight } from "lucide-react";
 
 export default function Home() {
   return (
-    <div className="flex flex-col items-center justify-center h-[100dvh] overflow-hidden bg-background">
+    <div className="flex flex-grow flex-col items-center justify-center bg-background">
       <div className="container flex flex-col items-center px-4 py-6 space-y-6 max-w-md">
         {/* Logo or badge */}
         <div className="rounded-full bg-primary/10 p-3 text-primary">
@@ -23,17 +23,14 @@ export default function Home() {
             <circle cx="17" cy="7" r="5" />
           </svg>
         </div>
-
         {/* Hero title */}
         <h1 className="text-4xl md:text-5xl font-bold text-center tracking-tight">
           Study Buddy
         </h1>
-
         <p className="text-muted-foreground text-center text-base max-w-xs">
           Your AI-powered study assistant. Get homework help, exam prep, and
           learning support anytime.
         </p>
-
         {/* Robot image - reduced size */}
         <div className="w-48 h-48 relative">
           <Image
@@ -44,7 +41,6 @@ export default function Home() {
             priority
           />
         </div>
-
         <Link href="/chat" className="w-full max-w-xs">
           <Button size="lg" className="w-full gap-2 font-medium">
             Get Started
