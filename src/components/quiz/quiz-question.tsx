@@ -54,7 +54,7 @@ export function QuizQuestion({
         {/* Card with title at top, options and buttons at bottom */}
         <Card className="flex flex-col flex-1">
           <CardHeader>
-            <CardTitle>{question.question}</CardTitle>
+            <CardTitle className="text-3xl">{question.question}</CardTitle>
           </CardHeader>
 
           <div className="mt-auto">
@@ -92,7 +92,7 @@ export function QuizQuestion({
                       />
                       <Label
                         htmlFor={`option-${index}`}
-                        className="cursor-pointer w-full"
+                        className="cursor-pointer w-full text-xl"
                       >
                         {option}
                       </Label>
