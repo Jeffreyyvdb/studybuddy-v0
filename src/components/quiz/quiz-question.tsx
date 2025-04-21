@@ -54,7 +54,14 @@ export function QuizQuestion({
         {/* Card with title at top, options and buttons at bottom */}
         <Card className="flex flex-col flex-1">
           <CardHeader>
-            <CardTitle className="text-3xl">{question.question}</CardTitle>
+            <div className="flex ">
+              <CardTitle className="text-3xl flex-grow">
+                {question.question}
+              </CardTitle>
+              <Button size="icon" variant="destructive" onClick={onCancelQuiz}>
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
           </CardHeader>
 
           <div className="mt-auto">
@@ -92,7 +99,7 @@ export function QuizQuestion({
                       />
                       <Label
                         htmlFor={`option-${index}`}
-                        className="cursor-pointer w-full text-xl"
+                        className="cursor-pointer w-full text-lg"
                       >
                         {option}
                       </Label>
@@ -111,13 +118,12 @@ export function QuizQuestion({
               </RadioGroup>
             </CardContent>
 
-            <CardFooter className="flex justify-between">
-              <Button variant="outline" onClick={onCancelQuiz} size="sm">
-                Cancel Quiz
-              </Button>
+            <CardFooter>
               <Button
                 onClick={onSubmitAnswer}
                 disabled={!selectedAnswer || showFeedback}
+                size="lg"
+                className="text-lg w-full"
               >
                 {showFeedback
                   ? isCorrect
