@@ -48,7 +48,7 @@ export default function LearnPage() {
         totalQuestions={quiz.totalQuestions}
         selectedAnswer={quiz.selectedAnswer}
         showFeedback={quiz.showFeedback}
-        isCorrect={quiz.isCorrect}
+        isCorrect={quiz.isCorrect ?? false}
         onSelectAnswer={quiz.actions.handleAnswerSelect}
         onSubmitAnswer={quiz.actions.submitAnswer}
         onCancelQuiz={quiz.actions.returnToSelection}

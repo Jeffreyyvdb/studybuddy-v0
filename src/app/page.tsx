@@ -191,7 +191,7 @@ export default function Home() {
                     />
                   ))}
                 </div>
-                <p className="text-lg mb-4">"{testimonial.quote}"</p>
+                <p className="text-lg mb-4">{testimonial.quote}</p>
                 <div>
                   <p className="font-semibold">{testimonial.name}</p>
                   <p className="text-sm text-muted-foreground">

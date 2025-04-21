@@ -1,4 +1,4 @@
-import { QuizData, QuizQuestion } from "@/data/quizzes";
+import { QuizData } from "@/data/quizzes";
 import { useState, useEffect } from "react";
 import { useUI } from "./ui-context";
 
