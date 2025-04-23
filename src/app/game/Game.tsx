@@ -8,21 +8,39 @@ import { NPCs } from "@/components/game/npcs";
 import { MobileControls } from "@/components/game/mobile-controls";
 import { QuestionPopup } from "@/components/game/question-popup";
 import { FeedbackMessage } from "@/components/game/feedback-message";
+import { useEffect } from "react";
 
 const Game = () => {
   // Using our custom hook for game logic
   const game = useGame();
 
+  // Add touch event listeners for mobile devices
+  useEffect(() => {
+    const preventDefaultTouchMove = (e: TouchEvent) => {
+      e.preventDefault();
+    };
+
+    // Prevent pinch zoom
+    document.addEventListener("touchmove", preventDefaultTouchMove, {
+      passive: false,
+    });
+
+    // Clean up event listeners on component unmount
+    return () => {
+      document.removeEventListener("touchmove", preventDefaultTouchMove);
+    };
+  }, []);
+
   return (
-    <div className="relative w-full h-screen overflow-hidden bg-gray-800">
+    <div className="fixed inset-0 overflow-hidden touch-none select-none bg-gray-800">
       {/* Game background with parallax scrolling */}
       <GameBackground position={game.position} />
 
       {/* Game UI (score, distance) */}
       <GameUI score={game.score} distance={game.distance} />
 
-      {/* Player character */}
-      <Player />
+      {/* Player character with animation based on movement */}
+      <Player direction={game.direction} isMoving={game.isMoving} />
 
       {/* NPCs in the world */}
       <NPCs
