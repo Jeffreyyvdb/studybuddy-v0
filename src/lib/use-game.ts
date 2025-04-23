@@ -2,40 +2,6 @@ import { useState, useEffect, useCallback } from "react";
 import { NpcObject, QuizQuestion, FeedbackType } from "../types/game";
 import { fetchSingleAIQuestion } from "./game-ai-service";
 
-// Default questions for the game
-const defaultQuestions: QuizQuestion[] = [
-  {
-    id: 1,
-    question: "What is the capital of France?",
-    options: ["Paris", "London", "Berlin", "Madrid"],
-    correctAnswer: "Paris",
-  },
-  {
-    id: 2,
-    question: "Which planet is closest to the Sun?",
-    options: ["Mercury", "Venus", "Earth", "Mars"],
-    correctAnswer: "Mercury",
-  },
-  {
-    id: 3,
-    question: "What is 2 + 2?",
-    options: ["4", "3", "5", "22"],
-    correctAnswer: "4",
-  },
-  {
-    id: 4,
-    question: "Who wrote Romeo and Juliet?",
-    options: ["William Shakespeare", "Charles Dickens", "Jane Austen"],
-    correctAnswer: "William Shakespeare",
-  },
-  {
-    id: 5,
-    question: "What is the largest mammal?",
-    options: ["Blue Whale", "Elephant", "Giraffe", "Polar Bear"],
-    correctAnswer: "Blue Whale",
-  },
-];
-
 // Different NPC types
 const defaultNpcTypes = ["🧙", "👩‍🏫", "👨‍🔬", "🧑‍⚕️", "👮"];
 
@@ -50,27 +16,21 @@ const aiQuizTopics = [
 ];
 
 interface UseGameOptions {
-  questions?: QuizQuestion[];
   npcTypes?: string[];
   npcSpawnInterval?: number;
   npcInteractionDistance?: number;
   movementSpeed?: number;
   worldWidth?: number;
   feedbackDuration?: number;
-  useAiQuestions?: boolean;
-  aiQuestionTopic?: string;
 }
 
 export function useGame({
-  questions = defaultQuestions,
   npcTypes = defaultNpcTypes,
   npcSpawnInterval = 150,
   npcInteractionDistance = 50,
   movementSpeed = 3,
   worldWidth = 5000,
   feedbackDuration = 2000,
-  useAiQuestions = true,
-  aiQuestionTopic = "general knowledge",
 }: UseGameOptions = {}) {
   // Game state
   const [position, setPosition] = useState(0);
@@ -86,6 +46,20 @@ export function useGame({
   const [npcs, setNpcs] = useState<NpcObject[]>([]);
   const [activeNpc, setActiveNpc] = useState<NpcObject | null>(null);
   const [isLoadingQuestion, setIsLoadingQuestion] = useState(false);
+  const [previousAnswerFeedback, setPreviousAnswerFeedback] = useState<
+    string | null
+  >(null);
+  const [answeredQuestions, setAnsweredQuestions] = useState<number>(0);
+  const [questionHistoryForNPC, setQuestionHistoryForNPC] = useState<
+    Record<
+      number,
+      {
+        question: string;
+        userAnswer: string;
+        correctAnswer: string;
+      }
+    >
+  >({});
 
   // Initialize NPCs
   useEffect(() => {
@@ -95,50 +69,58 @@ export function useGame({
       const randomNpcType =
         npcTypes[Math.floor(Math.random() * npcTypes.length)];
 
-      // Determine if this NPC will use an AI question
-      const useAiQuestion = useAiQuestions && Math.random() > 0.3; // 70% chance to use AI question
-
-      // For AI questions, we don't need to select a question ID now - we'll generate the question later
-      // For non-AI questions, assign a random question from the predefined list
-      const questionId = !useAiQuestion
-        ? Math.floor(Math.random() * questions.length)
-        : -1;
-
-      // For AI NPCs, assign a random topic
-      const aiTopic = useAiQuestion
-        ? aiQuizTopics[Math.floor(Math.random() * aiQuizTopics.length)]
-        : null;
+      // Assign a random topic to each NPC
+      const aiTopic =
+        aiQuizTopics[Math.floor(Math.random() * aiQuizTopics.length)];
 
       initialNpcs.push({
         id: i,
         position: i,
         character: randomNpcType,
-        questionId: questionId,
+        questionId: -1, // No longer need specific question IDs
         answered: false,
-        isAiQuestion: useAiQuestion,
+        isAiQuestion: true, // All NPCs now ask AI questions
         aiTopic: aiTopic,
+        questionsAsked: 0, // Track how many questions this NPC has asked
       });
     }
     setNpcs(initialNpcs);
-  }, [npcSpawnInterval, worldWidth, npcTypes, questions, useAiQuestions]);
+  }, [npcSpawnInterval, worldWidth, npcTypes]);
 
   // Fetch AI question for a specific NPC
-  const fetchNpcQuestion = useCallback(async (npc: NpcObject) => {
-    if (!npc.isAiQuestion || !npc.aiTopic) {
-      return null;
-    }
+  const fetchNpcQuestion = useCallback(
+    async (npc: NpcObject) => {
+      if (!npc.aiTopic) {
+        return null;
+      }
 
-    setIsLoadingQuestion(true);
-    try {
-      const question = await fetchSingleAIQuestion(npc.aiTopic, npc.id);
-      setIsLoadingQuestion(false);
-      return question;
-    } catch (error) {
-      console.error("Error fetching question for NPC:", error);
-      setIsLoadingQuestion(false);
-      return null;
-    }
-  }, []);
+      setIsLoadingQuestion(true);
+      try {
+        // Check if we have history for this NPC to provide feedback
+        const previousAnswer = questionHistoryForNPC[npc.id];
+        const question = await fetchSingleAIQuestion(
+          npc.aiTopic,
+          npc.id,
+          previousAnswer
+        );
+
+        // If there was a previous answer, extract the feedback
+        if (previousAnswer && question?.aiData?.feedback) {
+          setPreviousAnswerFeedback(question.aiData.feedback);
+        } else {
+          setPreviousAnswerFeedback(null);
+        }
+
+        setIsLoadingQuestion(false);
+        return question;
+      } catch (error) {
+        console.error("Error fetching question for NPC:", error);
+        setIsLoadingQuestion(false);
+        return null;
+      }
+    },
+    [questionHistoryForNPC]
+  );
 
   // Check if player is near an NPC to trigger question
   const checkNpcInteractions = useCallback(async () => {
@@ -157,21 +139,26 @@ export function useGame({
       setIsMoving(false);
       setActiveNpc(nearbyNpc);
 
-      if (nearbyNpc.isAiQuestion) {
-        // For AI questions, fetch on demand
-        const aiQuestion = await fetchNpcQuestion(nearbyNpc);
-        if (aiQuestion) {
-          setCurrentQuestion(aiQuestion);
-        } else {
-          // Fallback to a default question if AI fails
-          setCurrentQuestion(questions[0]);
-        }
+      // Fetch an AI question for this NPC
+      const aiQuestion = await fetchNpcQuestion(nearbyNpc);
+      if (aiQuestion) {
+        setCurrentQuestion(aiQuestion);
       } else {
-        // For regular questions, use the predefined one
-        setCurrentQuestion(questions[nearbyNpc.questionId % questions.length]);
+        // If fetching fails, create a simple fallback question
+        setCurrentQuestion({
+          id: nearbyNpc.id,
+          question: "What do you think about AI?",
+          options: [
+            "It's amazing",
+            "It's concerning",
+            "It's the future",
+            "Still developing",
+          ],
+          correctAnswer: "It's amazing",
+        });
       }
     }
-  }, [distance, npcs, npcInteractionDistance, questions, fetchNpcQuestion]);
+  }, [distance, npcs, npcInteractionDistance, fetchNpcQuestion]);
 
   // Handle movement logic
   useEffect(() => {
@@ -262,41 +249,113 @@ export function useGame({
     setDirection(0);
   }, []);
 
-  // Handle question answers
-  const handleAnswer = useCallback(
-    (selectedAnswer: string) => {
-      if (!currentQuestion || !activeNpc) return;
+  // Handle getting the next question after answering the current one
+  const handleGetNextQuestion = useCallback(async () => {
+    if (!activeNpc || !currentQuestion) return;
 
-      const isCorrect = selectedAnswer === currentQuestion.correctAnswer;
+    // Increment the number of questions this NPC has asked
+    setNpcs((prev) =>
+      prev.map((npc) =>
+        npc.id === activeNpc.id
+          ? { ...npc, questionsAsked: (npc.questionsAsked || 0) + 1 }
+          : npc
+      )
+    );
 
-      // Mark this NPC's question as answered
+    // If NPC has asked enough questions (3 seems like a good number), mark them as answered
+    const currentNpc = npcs.find((npc) => npc.id === activeNpc.id);
+    if (currentNpc && (currentNpc.questionsAsked || 0) >= 2) {
+      // Mark as answered after 3 questions (0, 1, 2)
       setNpcs((prev) =>
         prev.map((npc) =>
           npc.id === activeNpc.id ? { ...npc, answered: true } : npc
         )
       );
 
+      // Clear the question and allow movement again
+      setCurrentQuestion(null);
+      setActiveNpc(null);
+      setPreviousAnswerFeedback(null);
+      return;
+    }
+
+    // Fetch the next question for this NPC
+    const aiQuestion = await fetchNpcQuestion(activeNpc);
+    if (aiQuestion) {
+      setCurrentQuestion(aiQuestion);
+    } else {
+      // If fetching fails, mark the NPC as answered to avoid getting stuck
+      setNpcs((prev) =>
+        prev.map((npc) =>
+          npc.id === activeNpc.id ? { ...npc, answered: true } : npc
+        )
+      );
+      setCurrentQuestion(null);
+      setActiveNpc(null);
+      setPreviousAnswerFeedback(null);
+    }
+  }, [activeNpc, currentQuestion, npcs, fetchNpcQuestion]);
+
+  // Handle question answers
+  const handleAnswer = useCallback(
+    (selectedAnswer: string) => {
+      if (!currentQuestion || !activeNpc) return;
+
+      // For open questions or multiple choice, we handle scoring the same way for now
+      const isCorrect =
+        selectedAnswer.toLowerCase() ===
+        currentQuestion.correctAnswer.toLowerCase();
+
+      // Add points to the score
       if (isCorrect) {
         setScore((prev) => prev + 10);
         setFeedbackMessage("Correct!");
         setFeedbackType("correct");
       } else {
         setFeedbackMessage(
-          `Incorrect. The answer is ${currentQuestion.correctAnswer}.`
+          `Incorrect. The correct answer is ${currentQuestion.correctAnswer}.`
         );
         setFeedbackType("incorrect");
       }
 
-      // Clear feedback and question after a short delay
+      // Increment the number of questions answered
+      setAnsweredQuestions((prev) => prev + 1);
+
+      // Store the question and user's answer to provide feedback in the next question
+      setQuestionHistoryForNPC((prev) => ({
+        ...prev,
+        [activeNpc.id]: {
+          question: currentQuestion.question,
+          userAnswer: selectedAnswer,
+          correctAnswer: currentQuestion.correctAnswer,
+        },
+      }));
+
+      // Clear feedback after a short delay
       setTimeout(() => {
         setFeedbackMessage(null);
         setFeedbackType(null);
-        setCurrentQuestion(null);
-        setActiveNpc(null);
       }, feedbackDuration);
     },
     [currentQuestion, activeNpc, feedbackDuration]
   );
+
+  // Handle closing the question popup and resuming gameplay
+  const handleCloseQuestion = useCallback(() => {
+    // Mark the current NPC as completely answered
+    if (activeNpc) {
+      setNpcs((prev) =>
+        prev.map((npc) =>
+          npc.id === activeNpc.id ? { ...npc, answered: true } : npc
+        )
+      );
+    }
+
+    // Clear question-related state
+    setCurrentQuestion(null);
+    setActiveNpc(null);
+    setPreviousAnswerFeedback(null);
+  }, [activeNpc]);
 
   // Calculate positions for visible NPCs relative to the player's position
   const getVisibleNpcs = useCallback(() => {
@@ -330,10 +389,14 @@ export function useGame({
     npcInteractionDistance,
     visibleNpcs: getVisibleNpcs(),
     isLoadingQuestion,
+    previousAnswerFeedback,
+    answeredQuestions,
 
     // Actions
     handleMobileButtonPress,
     handleMobileButtonRelease,
     handleAnswer,
+    handleGetNextQuestion,
+    handleCloseQuestion, // Add the new function to the returned object
   };
 }

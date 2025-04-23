@@ -7,12 +7,20 @@ interface QuestionPopupProps {
   question: QuizQuestion;
   npc: NpcObject;
   onAnswer: (answer: string) => void;
+  onGetNextQuestion?: () => void; // For requesting the next question
+  isSubmittingAnswer?: boolean; // Whether we're waiting for AI feedback
+  feedback?: string; // Feedback from the AI on previous answer
+  onClose?: () => void; // New prop to close the popup and resume gameplay
 }
 
 export const QuestionPopup: React.FC<QuestionPopupProps> = ({
   question,
   npc,
   onAnswer,
+  onGetNextQuestion,
+  isSubmittingAnswer = false,
+  feedback,
+  onClose,
 }) => {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
@@ -22,9 +30,11 @@ export const QuestionPopup: React.FC<QuestionPopupProps> = ({
   // Check if this is an AI question with the "open" type
   const isAiQuestion = !!question.aiData;
   const isOpenQuestion = isAiQuestion && question.aiData?.type === "open";
+  const hasMoreQuestions =
+    npc.questionsAsked !== undefined && npc.questionsAsked < 2; // Check if NPC has more questions
 
   const handleOptionSelect = (option: string) => {
-    if (showFeedback) return; // Prevent changing answer during feedback
+    if (showFeedback || isSubmittingAnswer) return; // Prevent changing answer during feedback
     setSelectedAnswer(option);
   };
 
@@ -32,14 +42,35 @@ export const QuestionPopup: React.FC<QuestionPopupProps> = ({
     const answerToCheck = isOpenQuestion ? inputAnswer : selectedAnswer;
     if (!answerToCheck) return;
 
-    const correct = answerToCheck === question.correctAnswer;
-    setIsCorrect(correct);
+    // For open questions, we don't immediately determine correctness
+    // For multiple choice, we can check against the known correct answer
+    if (!isOpenQuestion) {
+      const correct = answerToCheck === question.correctAnswer;
+      setIsCorrect(correct);
+    }
+
     setShowFeedback(true);
 
     // After a short delay, send the answer back to the game
     setTimeout(() => {
       onAnswer(answerToCheck);
-    }, 1500);
+    }, 500);
+  };
+
+  const handleNextQuestion = () => {
+    // Reset state for the next question
+    setShowFeedback(false);
+    setIsCorrect(null);
+    setSelectedAnswer(null);
+    setInputAnswer("");
+
+    // Request next question from parent
+    if (onGetNextQuestion && hasMoreQuestions) {
+      onGetNextQuestion();
+    } else if (onClose) {
+      // If no more questions or onGetNextQuestion not available, close popup
+      onClose();
+    }
   };
 
   return (
@@ -55,6 +86,14 @@ export const QuestionPopup: React.FC<QuestionPopupProps> = ({
           {question.question}
         </h2>
 
+        {/* Previous feedback section */}
+        {feedback && (
+          <div className="mb-6 p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+            <h3 className="font-semibold mb-1">Feedback on Previous Answer:</h3>
+            <p className="text-sm">{feedback}</p>
+          </div>
+        )}
+
         {isOpenQuestion ? (
           <div className="mb-4">
             <Input
@@ -62,7 +101,7 @@ export const QuestionPopup: React.FC<QuestionPopupProps> = ({
               onChange={(e) => setInputAnswer(e.target.value)}
               placeholder="Type your answer here..."
               className="mb-3"
-              disabled={showFeedback}
+              disabled={showFeedback || isSubmittingAnswer}
             />
           </div>
         ) : (
@@ -88,7 +127,7 @@ export const QuestionPopup: React.FC<QuestionPopupProps> = ({
                   key={option}
                   className={`w-full py-3 px-4 ${optionClass} rounded-lg text-left font-medium transition-colors border-2 flex items-center justify-between`}
                   onClick={() => handleOptionSelect(option)}
-                  disabled={showFeedback}
+                  disabled={showFeedback || isSubmittingAnswer}
                 >
                   {option}
                   {showFeedback && option === question.correctAnswer && (
@@ -109,7 +148,7 @@ export const QuestionPopup: React.FC<QuestionPopupProps> = ({
         {showFeedback && question.aiData?.explanation && (
           <div
             className={`mt-4 p-3 rounded-lg ${
-              isCorrect
+              isCorrect !== false
                 ? "bg-green-100 dark:bg-green-900/20"
                 : "bg-red-100 dark:bg-red-900/20"
             }`}
@@ -118,14 +157,31 @@ export const QuestionPopup: React.FC<QuestionPopupProps> = ({
           </div>
         )}
 
-        {/* Submit button */}
-        {!showFeedback && (
+        {/* Submit or Continue buttons */}
+        {!showFeedback ? (
           <button
             onClick={handleSubmit}
-            disabled={isOpenQuestion ? !inputAnswer : !selectedAnswer}
+            disabled={
+              isOpenQuestion
+                ? !inputAnswer
+                : !selectedAnswer || isSubmittingAnswer
+            }
             className="mt-4 w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-colors disabled:opacity-50"
           >
-            Submit Answer
+            {isSubmittingAnswer ? "Submitting..." : "Submit Answer"}
+          </button>
+        ) : (
+          <button
+            onClick={handleNextQuestion}
+            className={`mt-4 w-full py-2 px-4 ${
+              isCorrect === false
+                ? "bg-red-600 hover:bg-red-700"
+                : "bg-green-600 hover:bg-green-700"
+            } text-white font-bold rounded-lg transition-colors`}
+          >
+            {hasMoreQuestions && onGetNextQuestion
+              ? "Next Question"
+              : "Continue Playing"}
           </button>
         )}
       </div>

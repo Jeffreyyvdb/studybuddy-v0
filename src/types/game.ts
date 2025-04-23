@@ -17,6 +17,7 @@ export interface NpcObject {
   answered: boolean;
   isAiQuestion?: boolean; // Flag to indicate if this NPC asks an AI question
   aiTopic?: string | null; // The topic for AI-generated questions
+  questionsAsked?: number; // Track how many questions this NPC has asked
 }
 
 export type FeedbackType = "correct" | "incorrect" | null;

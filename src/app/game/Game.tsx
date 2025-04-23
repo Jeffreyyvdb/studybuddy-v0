@@ -38,7 +38,11 @@ const Game = () => {
       <GameBackground position={game.position} />
 
       {/* Game UI (score, distance) */}
-      <GameUI score={game.score} distance={game.distance} />
+      <GameUI
+        score={game.score}
+        distance={game.distance}
+        questionsAnswered={game.answeredQuestions}
+      />
 
       {/* Player character with animation based on movement */}
       <Player direction={game.direction} isMoving={game.isMoving} />
@@ -64,6 +68,10 @@ const Game = () => {
           question={game.currentQuestion}
           npc={game.activeNpc}
           onAnswer={game.handleAnswer}
+          onGetNextQuestion={game.handleGetNextQuestion}
+          isSubmittingAnswer={game.isLoadingQuestion}
+          feedback={game.previousAnswerFeedback}
+          onClose={game.handleCloseQuestion}
         />
       )}
 
