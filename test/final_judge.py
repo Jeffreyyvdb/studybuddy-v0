@@ -3,6 +3,18 @@ import json
 from collections import defaultdict
 
 
+# Step 1: Read the file
+def read_text_file(file_path):
+    try:
+        with open(file_path, "r", encoding="utf-8") as file:
+            return file.read()
+    except FileNotFoundError:
+        print(f"Error: The file at {file_path} was not found.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+
+# Step 2: Extract JSON blocks
 def extract_json_blocks(text):
     json_blocks = []
     brace_stack = []
@@ -23,30 +35,62 @@ def extract_json_blocks(text):
     return json_blocks
 
 
-def aggregate_response_correctness(text):
-    results = defaultdict(lambda: {"true": 0, "false": 0})
+# Step 3: Aggregate correctness + difficulty + progress
+def aggregate_detailed_response_data(text):
+    results = defaultdict(
+        lambda: {
+            "true": {"count": 0, "total_difficulty": 0},
+            "false": {"count": 0, "total_difficulty": 0},
+            "progress": [],
+        }
+    )
+
     json_blocks = extract_json_blocks(text)
 
     for block in json_blocks:
         try:
             data = json.loads(block)
-            subcategory = data.get("subcategory", "")
-            correctness = data.get("previousResponseCorrect")
-            if correctness is not None:
-                correctness_str = str(correctness).lower()
-                if correctness_str in results[subcategory]:
-                    results[subcategory][correctness_str] += 1
+            subcat = data.get("subcategory", "") or "[None]"
+            correct = data.get("previousResponseCorrect")
+            difficulty = data.get("difficulty")
+
+            if correct is not None and difficulty is not None:
+                correct_str = str(correct).lower()
+                results[subcat][correct_str]["count"] += 1
+                results[subcat][correct_str]["total_difficulty"] += difficulty
+
+                results[subcat]["progress"].append(
+                    {"difficulty": difficulty, "correct": correct}
+                )
+
         except json.JSONDecodeError:
-            continue  # Skip invalid JSON blocks
+            continue
+
+    # Post-process to calculate average difficulty
+    for subcat, stats in results.items():
+        for status in ["true", "false"]:
+            count = stats[status]["count"]
+            total_diff = stats[status]["total_difficulty"]
+            stats[status]["avg_difficulty"] = (
+                round(total_diff / count, 2) if count > 0 else None
+            )
+            del stats[status]["total_difficulty"]
 
     return results
 
 
-# Process the chat history
+# Step 4: Run everything
+file_path = (
+    "C:/Users/pnt/Sync/TIG/hackathon Warschau/example chat v4.txt"  # <- your path
+)
+chat_history = read_text_file(file_path)
+
 if chat_history:
-    aggregated_results = aggregate_response_correctness(chat_history)
-    print("Aggregated Results:")
-    for subcat, counts in aggregated_results.items():
-        print(
-            f"Subcategory: {subcat or '[None]'}, True: {counts['true']}, False: {counts['false']}"
-        )
+    results = aggregate_detailed_response_data(chat_history)
+
+    # Pretty-print for now
+    import pprint
+
+    pprint.pprint(results, sort_dicts=False)
+
+# %%
