@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { NpcObject, QuizQuestion, FeedbackType } from "../types/game";
 import { Message } from "ai";
+import confetti from "canvas-confetti";
 
 // Different NPC types
 const defaultNpcTypes = ["🧙", "👩‍🏫", "👨‍🔬", "🧑‍⚕️", "👮"];
@@ -22,6 +23,7 @@ interface AIGameQuestionResponse {
   id: number | string;
   previousResponseCorrect?: boolean; // Make optional as it might not be in the first response
   explanation?: string; // Make optional
+  tag: string; // Tag for AI questions
 }
 
 // Define expected AI response structure for game feedback
@@ -39,8 +41,8 @@ export function useGame({
   npcInteractionDistance = 50,
   movementSpeed = 3,
   worldWidth = 5000,
-  feedbackDuration = 2000,
   subject = "General Knowledge", // Default subject
+  feedbackDuration = 8000
 }: UseGameOptions = {}) {
   // Game state
   const [position, setPosition] = useState(0);
@@ -398,6 +400,7 @@ export function useGame({
         } else {
           if (result.previousResponseCorrect) {
             setScore((prev) => prev + 10);
+            triggerConfetti(); // Trigger confetti for correct answer
           }
           setFeedbackMessage(result.explanation);
           setFeedbackType(
@@ -488,4 +491,13 @@ export function useGame({
     handleMobileButtonRelease,
     submitAnswerToAI,
   };
+}
+
+// Function to trigger confetti
+function triggerConfetti() {
+  confetti({
+    particleCount: 100,
+    spread: 70,
+    origin: { y: 0.6 },
+  });
 }

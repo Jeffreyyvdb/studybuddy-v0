@@ -2,7 +2,6 @@
 
 import { useGame } from "@/lib/use-game";
 import { GameBackground } from "@/components/game/game-background";
-import { GameUI } from "@/components/game/game-ui";
 import { Player } from "@/components/game/player";
 import { NPCs } from "@/components/game/npcs";
 import { MobileControls } from "@/components/game/mobile-controls";
@@ -41,9 +40,6 @@ const Game = () => {
       {/* Game background with parallax scrolling */}
       <GameBackground position={game.position} />
 
-      {/* Game UI (score, distance) */}
-      <GameUI score={game.score} distance={game.distance} />
-
       {/* Player character with animation based on movement */}
       <Player direction={game.direction} isMoving={game.isMoving} />
 
@@ -63,7 +59,6 @@ const Game = () => {
       {game.currentQuestion && game.activeNpc && (
         <QuestionPopup
           question={game.currentQuestion}
-          npc={game.activeNpc}
           onAnswer={game.submitAnswerToAI} // Use the new AI handler
           isAnswering={game.isAnswering} // Pass loading state
         />

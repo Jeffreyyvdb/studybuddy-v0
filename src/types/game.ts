@@ -7,6 +7,7 @@ export interface QuizQuestion {
   correctAnswer: string; // Still needed for predefined, maybe used by AI for context
   explanation?: string; // Add explanation from AI feedback
   previousResponseCorrect?: boolean; // Add feedback status
+  tag: string; // Tag for AI questions
 }
 
 export interface NpcObject {
