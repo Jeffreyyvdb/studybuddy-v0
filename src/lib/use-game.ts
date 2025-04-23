@@ -13,6 +13,7 @@ interface UseGameOptions {
   movementSpeed?: number;
   worldWidth?: number;
   feedbackDuration?: number;
+  subject?: string; // Add subject option
 }
 
 // Define expected AI response structure for game questions
@@ -40,7 +41,8 @@ export function useGame({
   npcInteractionDistance = 50,
   movementSpeed = 3,
   worldWidth = 5000,
-  feedbackDuration = 8000,
+  subject = "General Knowledge", // Default subject
+  feedbackDuration = 8000
 }: UseGameOptions = {}) {
   // Game state
   const [position, setPosition] = useState(0);
@@ -98,8 +100,8 @@ export function useGame({
       };
 
       if (!messageHistory || messageHistory.length === 0) {
-        nextQuestionPrompt.content =
-          "Start a quiz about math. Give me a question.";
+        // Use the subject parameter to specify the quiz topic
+        nextQuestionPrompt.content = `Start a quiz about ${subject}. Give me a question.`;
       }
 
       // Send the existing history PLUS the new prompt
@@ -185,7 +187,8 @@ export function useGame({
       isFetchingQuestion,
       isSubmittingAnswer,
       feedbackDuration,
-      messageHistory, // Add messageHistory as a dependency
+      messageHistory,
+      subject, // Add subject as dependency
     ]
   );
 

@@ -7,11 +7,24 @@ import { NPCs } from "@/components/game/npcs";
 import { MobileControls } from "@/components/game/mobile-controls";
 import { QuestionPopup } from "@/components/game/question-popup";
 import { FeedbackMessage } from "@/components/game/feedback-message";
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 
 const Game = () => {
-  // Using our custom hook for game logic
-  const game = useGame();
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <GameContent />
+    </Suspense>
+  );
+};
+
+const GameContent = () => {
+  // Get the subject from URL query parameters
+  const searchParams = useSearchParams();
+  const subject = searchParams.get("subject") || "General Knowledge";
+
+  // Using our custom hook for game logic with the subject from URL
+  const game = useGame({ subject });
 
   // Add touch event listeners for mobile devices
   useEffect(() => {
