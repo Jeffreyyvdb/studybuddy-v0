@@ -18,6 +18,14 @@ export const QuestionPopup: React.FC<QuestionPopupProps> = ({
 }) => {
   // State for open-ended answer input
   const [openAnswer, setOpenAnswer] = useState("");
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null); // State to track selected answer
+
+  const handleMultipleChoiceClick = (option: string) => {
+    if (!isAnswering) {
+      setSelectedAnswer(option); // Set the selected answer
+      onAnswer(option); // Call the original handler
+    }
+  };
 
   const handleOpenAnswerSubmit = () => {
     if (openAnswer.trim() && !isAnswering) {
@@ -28,7 +36,8 @@ export const QuestionPopup: React.FC<QuestionPopupProps> = ({
   return (
     <div className="fixed top-15 flex w-full items-center justify-center z-40">
       <div className="p-6 max-w-md w-full relative">
-        <h2 className="text-md font-bold mb-4 text-gray-800">
+        {/* Keep the question text without the outline */}
+        <h2 className="text-md font-bold mb-4 text-gray-800 p-2 rounded">
           {question.question}
         </h2>
 
@@ -39,9 +48,14 @@ export const QuestionPopup: React.FC<QuestionPopupProps> = ({
             {question.options.map((option) => (
               <Button
                 key={option}
-                className="bg-white"
+                // Apply outline if this option is the selected one
+                className={`bg-white ${
+                  selectedAnswer === option
+                    ? "border-4 border-primary" // Add outline class if selected
+                    : ""
+                }`}
                 size={"lg"}
-                onClick={() => onAnswer(option)}
+                onClick={() => handleMultipleChoiceClick(option)} // Use the new handler
                 disabled={isAnswering}
               >
                 {option}

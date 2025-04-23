@@ -38,7 +38,7 @@ export function useGame({
   npcInteractionDistance = 50,
   movementSpeed = 3,
   worldWidth = 5000,
-  feedbackDuration = 2000,
+  feedbackDuration = 8000,
 }: UseGameOptions = {}) {
   // Game state
   const [position, setPosition] = useState(0);
