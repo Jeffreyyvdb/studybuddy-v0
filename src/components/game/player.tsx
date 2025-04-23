@@ -24,7 +24,7 @@ export const Player: React.FC<PlayerProps> = ({ direction, isMoving }) => {
         className={`w-32 h-32 flex items-center justify-center ${getAnimationClass()} transition-transform duration-300`}
       >
         <Image
-          src="/images/study-buddy.png"
+          src="/images/girl.png"
           alt="Study Buddy character"
           width={1024}
           height={1024}
