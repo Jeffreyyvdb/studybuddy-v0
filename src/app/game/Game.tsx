@@ -2,7 +2,6 @@
 
 import { useGame } from "@/lib/use-game";
 import { GameBackground } from "@/components/game/game-background";
-import { GameUI } from "@/components/game/game-ui";
 import { Player } from "@/components/game/player";
 import { NPCs } from "@/components/game/npcs";
 import { MobileControls } from "@/components/game/mobile-controls";
