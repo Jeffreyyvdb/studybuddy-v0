@@ -38,10 +38,13 @@ export async function POST(req: Request) {
 
   if (!azureOpenAiApiKey || !azureOpenAiEndpoint) {
     console.error("Azure OpenAI API credentials are missing."); // Log missing credentials
-    return new Response(JSON.stringify({ error: "Azure OpenAI API credentials are missing." }), {
-      headers: { "Content-Type": "application/json" },
-      status: 500,
-    });
+    return new Response(
+      JSON.stringify({ error: "Azure OpenAI API credentials are missing." }),
+      {
+        headers: { "Content-Type": "application/json" },
+        status: 500,
+      }
+    );
   }
 
   // Instantiate AzureOpenAI with endpoint and key
@@ -56,7 +59,10 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     userMessages = body.messages; // Expecting only user/assistant messages from client
-    console.log("Received user messages:", JSON.stringify(userMessages, null, 2)); // Log incoming messages
+    console.log(
+      "Received user messages:",
+      JSON.stringify(userMessages, null, 2)
+    ); // Log incoming messages
   } catch (parseError) {
     console.error("Error parsing request body:", parseError);
     return new Response(JSON.stringify({ error: "Invalid request body." }), {
@@ -65,64 +71,53 @@ export async function POST(req: Request) {
     });
   }
 
-  if (!userMessages || !Array.isArray(userMessages) || userMessages.length === 0) { // Add check for array and length
+  if (
+    !userMessages ||
+    !Array.isArray(userMessages) ||
+    userMessages.length === 0
+  ) {
+    // Add check for array and length
     console.error("No valid messages found in request body.");
-    return new Response(JSON.stringify({ error: "Missing or invalid messages in request body." }), { // Updated error message
-      headers: { "Content-Type": "application/json" },
-      status: 400,
-    });
+    return new Response(
+      JSON.stringify({ error: "Missing or invalid messages in request body." }),
+      {
+        // Updated error message
+        headers: { "Content-Type": "application/json" },
+        status: 400,
+      }
+    );
   }
 
   // Prepend the system prompt to the user messages
-  const messages = [
-    { role: "system", content: systemPrompt },
-    ...userMessages,
-  ];
+  const messages = [{ role: "system", content: systemPrompt }, ...userMessages];
   console.log("Messages sent to API:", JSON.stringify(messages, null, 2)); // Log messages including system prompt
 
-  try {
-    console.log("Calling Azure OpenAI API..."); // Log before API call
-    // Use client.chat.completions.create
-    const response = await client.chat.completions.create({
-      messages, // Send the combined messages array
-      max_tokens: 2000, // Use snake_case for parameters
-      response_format: { type: "json_object" }, // Enforce JSON output
-      // model is implicitly set by the deployment name during client initialization
-    });
+  console.log("Calling Azure OpenAI API..."); // Log before API call
+  // Use client.chat.completions.create
+  const response = await client.chat.completions.create({
+    model: "gpt-4o", // Specify the model to use
+    messages, // Send the combined messages array
+    max_tokens: 2000, // Use snake_case for parameters
+    response_format: { type: "json_object" }, // Enforce JSON output
+  });
 
-    console.log("Azure OpenAI Raw Response:", JSON.stringify(response, null, 2)); // Log the raw successful response
+  console.log("Azure OpenAI Raw Response:", JSON.stringify(response, null, 2)); // Log the raw successful response
 
-    const chatbotResponse = response.choices?.[0]?.message?.content || "";
+  const chatbotResponse = response.choices?.[0]?.message?.content || "";
 
-    if (!chatbotResponse) {
-      console.warn("AI response content is empty."); // Log warning if content is empty
-      // Decide if empty response is an error or valid (e.g., content filtering)
-      // For now, let's return it but log a warning.
-      // return new Response(JSON.stringify({ error: "AI response is empty." }), {
-      //   headers: { "Content-Type": "application/json" },
-      //   status: 500,
-      // });
-    }
-
-    console.log("Extracted Chatbot Response:", chatbotResponse); // Log the extracted response
-
-    return new Response(chatbotResponse, {
-      headers: { "Content-Type": "application/json" },
-    });
-  } catch (error: any) { // Type error as any to access properties
-    console.error("Error calling Azure OpenAI API:", error); // Log the full error
-    // Log specific details if available (e.g., from Azure API error structure)
-    if (error.response) {
-      console.error("Azure API Error Response Status:", error.response.status);
-      console.error("Azure API Error Response Data:", error.response.data);
-    } else if (error.request) {
-      console.error("Azure API No Response Received:", error.request);
-    } else {
-      console.error("Azure API Error Message:", error.message);
-    }
-    return new Response(JSON.stringify({ error: "Failed to fetch AI response." }), {
-      headers: { "Content-Type": "application/json" },
-      status: 500,
-    });
+  if (!chatbotResponse) {
+    console.warn("AI response content is empty."); // Log warning if content is empty
+    // Decide if empty response is an error or valid (e.g., content filtering)
+    // For now, let's return it but log a warning.
+    // return new Response(JSON.stringify({ error: "AI response is empty." }), {
+    //   headers: { "Content-Type": "application/json" },
+    //   status: 500,
+    // });
   }
+
+  console.log("Extracted Chatbot Response:", chatbotResponse); // Log the extracted response
+
+  return new Response(chatbotResponse, {
+    headers: { "Content-Type": "application/json" },
+  });
 }
