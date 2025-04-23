@@ -36,9 +36,6 @@ const Game = () => {
       {/* Game background with parallax scrolling */}
       <GameBackground position={game.position} />
 
-      {/* Game UI (score, distance) */}
-      <GameUI score={game.score} distance={game.distance} />
-
       {/* Player character with animation based on movement */}
       <Player direction={game.direction} isMoving={game.isMoving} />
 

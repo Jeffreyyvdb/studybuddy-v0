@@ -32,7 +32,7 @@ export const QuestionPopup: React.FC<QuestionPopupProps> = ({
   };
 
   return (
-    <div className="fixed top-15 flex w-full items-center justify-start z-40">
+    <div className="fixed top-0 flex w-full items-center justify-start z-40">
       <div className="p-6 max-w-md w-full relative">
         <span className="text-accent">{question.tag}</span>
 
