@@ -93,6 +93,10 @@ export function useGame({
         content: "Based on our previous conversation, please provide the next quiz question.",
       };
 
+      if (!messageHistory || messageHistory.length === 0) {
+        nextQuestionPrompt.content = "Start a quiz about math. Give me a question.";
+      }
+
       // Send the existing history PLUS the new prompt
       const historyToSend = [...messageHistory, nextQuestionPrompt as Message];
       // Update history state immediately
