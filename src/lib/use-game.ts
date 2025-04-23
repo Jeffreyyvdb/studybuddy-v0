@@ -34,7 +34,7 @@ interface AIGameFeedbackResponse {
 
 export function useGame({
   npcTypes = defaultNpcTypes,
-  npcSpawnInterval = 150,
+  npcSpawnInterval = 450,
   npcInteractionDistance = 50,
   movementSpeed = 3,
   worldWidth = 5000,
