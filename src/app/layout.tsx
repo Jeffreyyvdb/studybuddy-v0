@@ -3,6 +3,7 @@ import { Nunito } from "next/font/google";
 import { PT_Sans } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ui/theme-provider";
+import Image from "next/image";
 
 const nunito = Nunito({
   variable: "--font-nunito",
@@ -37,7 +38,18 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <div className="">{children}</div>
+          <div className="flex flex-col">
+            <div className="bg-white flex items-center h-18 drop-shadow px-4 z-50">
+              <Image
+                alt="Logo"
+                className="w-44"
+                height={139}
+                width={780}
+                src={"/images/logo.png"}
+              />
+            </div>
+            <div className="">{children}</div>
+          </div>
         </ThemeProvider>
       </body>
     </html>

@@ -50,20 +50,22 @@ const Game = () => {
         onButtonRelease={game.handleMobileButtonRelease}
       />
 
-      {/* Question popup */}
-      {game.currentQuestion && game.activeNpc && (
-        <QuestionPopup
-          question={game.currentQuestion}
-          onAnswer={game.submitAnswerToAI} // Use the new AI handler
-          isAnswering={game.isAnswering} // Pass loading state
-        />
-      )}
+      <div className="fixed top-16 flex flex-col items-center w-full z-40">
+        {/* Question popup */}
+        {game.currentQuestion && game.activeNpc && (
+          <QuestionPopup
+            question={game.currentQuestion}
+            onAnswer={game.submitAnswerToAI} // Use the new AI handler
+            isAnswering={game.isAnswering} // Pass loading state
+          />
+        )}
 
-      {/* Feedback message */}
-      <FeedbackMessage
-        message={game.feedbackMessage}
-        type={game.feedbackType}
-      />
+        {/* Feedback message */}
+        <FeedbackMessage
+          message={game.feedbackMessage}
+          type={game.feedbackType}
+        />
+      </div>
     </div>
   );
 };
