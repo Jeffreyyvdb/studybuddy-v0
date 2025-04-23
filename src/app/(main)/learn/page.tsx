@@ -6,6 +6,8 @@ import { QuizResults } from "@/components/quiz/quiz-results";
 import { QuizSelection } from "@/components/quiz/quiz-selection";
 import { quizzes } from "@/data/quizzes";
 import { useQuiz } from "@/lib/use-quiz";
+import { AIQuizResponse } from "@/lib/use-quiz-types"; // Import AIQuizResponse
+import { QuizQuestion as QuestionType } from "@/data/history-questions"; // Import QuestionType if needed for casting
 
 export default function LearnPage() {
   const quiz = useQuiz({
@@ -46,30 +48,28 @@ export default function LearnPage() {
     const questionData = isAi ? quiz.currentAiQuestion : quiz.currentQuestion;
     const currentIdx = isAi ? quiz.aiTotalAnswered : quiz.currentQuestionIndex;
 
-    // Ensure we have valid question data AND a positive total question count before rendering
     if (questionData && quiz.totalQuestions > 0) {
-      // Adapt AI question data slightly for QuizQuestion component if needed
-      // QuizQuestion expects id, question, options, correctAnswer
-      // AIQuizResponse has question, options, type, explanation, previousResponseCorrect
-      // We need to handle this potential mismatch.
-      // For now, let's assume QuizQuestion can handle the AI structure or we need a different component.
-      // Let's pass the data conditionally based on type for now, focusing on fixing standard quiz.
-
+      // Adapt AI/Standard question data for QuizQuestion component
       const questionForComponent = isAi
-        ? { // Adapt AI response - NOTE: This might need refinement based on QuizQuestion needs
-            id: `ai-${currentIdx}`, // Generate a temporary ID
-            question: questionData.question,
-            options: questionData.options,
-            correctAnswer: "", // QuizQuestion uses this for feedback, AI handles feedback differently
-            type: questionData.type,
-            explanation: questionData.explanation
+        ? { // Adapt AI response to match DisplayQuestion type
+            id: `ai-${currentIdx}`, // Provide the required id
+            question: (questionData as AIQuizResponse).question,
+            // Include options even if empty for type consistency, QuizQuestion handles rendering
+            options: (questionData as AIQuizResponse).options || [],
+            // Provide dummy correctAnswer or handle optionality in DisplayQuestion
+            correctAnswer: "", // Or make correctAnswer optional in the AI part of DisplayQuestion
+            // Include type and explanation from AI response
+            type: (questionData as AIQuizResponse).type,
+            explanation: (questionData as AIQuizResponse).explanation,
           }
-        : questionData; // Use predefined question directly
+        : questionData as QuestionType; // Assert as QuestionType for non-AI
+
+      // Type assertion to satisfy the component's expected prop type
+      const displayQuestion = questionForComponent as QuestionType | (Omit<AIQuizResponse, 'options' | 'previousResponseCorrect' | 'tag'> & { id: string; correctAnswer?: string });
 
       return (
         <QuizQuestion
-          // @ts-ignore // Temporary ignore until QuizQuestion properly handles AI type or we use a different component
-          question={questionForComponent}
+          question={displayQuestion} // Pass the correctly typed and structured data
           currentIndex={currentIdx}
           totalQuestions={quiz.totalQuestions}
           selectedAnswer={quiz.selectedAnswer || ""}
@@ -78,17 +78,16 @@ export default function LearnPage() {
           onSelectAnswer={quiz.actions.handleAnswerSelect}
           onSubmitAnswer={quiz.actions.submitAnswer}
           onCancelQuiz={quiz.actions.returnToSelection}
-          isSubmittingAnswer={quiz.isSubmittingAiAnswer} // Pass the loading state
+          isSubmittingAnswer={quiz.isSubmittingAiAnswer}
           isAiQuiz={isAi}
-          aiQuestionType={isAi ? quiz.currentAiQuestion?.type : undefined}
-          aiExplanation={isAi ? quiz.currentAiQuestion?.explanation : undefined}
+          aiQuestionType={isAi ? (questionData as AIQuizResponse).type : undefined}
+          aiExplanation={isAi ? (questionData as AIQuizResponse).explanation : undefined}
+          onProceed={quiz.actions.proceedToNextStep} // Add the onProceed prop
         />
       );
     } else if (isAi && !questionData) {
-      // Specific loading state for AI quiz while fetching the first question
       return <div>Loading AI question...</div>;
     } else {
-      // Generic loading or fallback state if conditions aren't met
       return <div>Loading quiz...</div>;
     }
   }

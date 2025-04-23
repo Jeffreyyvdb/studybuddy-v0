@@ -25,6 +25,7 @@ interface AIQuizStartPayload {
   topic: string;
 }
 
+// feedbackDelay is no longer used for auto-progression, but might be used elsewhere? Keeping param for now.
 export function useQuiz({ quizzes, feedbackDelay = 1000 }: UseQuizOptions) {
   const [quizState, setQuizState] = useState<QuizState>("selection");
   const [selectedQuizId, setSelectedQuizId] = useState<string | null>(null);
@@ -110,7 +111,7 @@ export function useQuiz({ quizzes, feedbackDelay = 1000 }: UseQuizOptions) {
       if (payload.type === "answer") {
         const wasCorrect = !!data.previousResponseCorrect;
         setIsCorrect(wasCorrect);
-        setShowFeedback(true);
+        setShowFeedback(true); // Show feedback
 
         if (wasCorrect) {
           setAiScore((prev) => prev + 1);
@@ -119,22 +120,17 @@ export function useQuiz({ quizzes, feedbackDelay = 1000 }: UseQuizOptions) {
         nextTotalAnswered = aiTotalAnswered + 1;
         setAiTotalAnswered(nextTotalAnswered);
 
-        setTimeout(() => {
-          // Check if the quiz should end
-          if (nextTotalAnswered >= MAX_QUESTIONS) {
-            setQuizState("results");
-            setShowFeedback(false); // Hide feedback before showing results
-            setIsCorrect(null);
-            setIsSubmittingAiAnswer(false);
-          } else {
-            // Continue to the next question
-            setCurrentAiQuestion(data);
-            setSelectedAnswer(null);
-            setShowFeedback(false);
-            setIsCorrect(null);
-            setIsSubmittingAiAnswer(false);
-          }
-        }, feedbackDelay);
+        // --- Removed setTimeout wrapper ---
+        // Check if the quiz should end immediately after feedback state is set
+        if (nextTotalAnswered >= MAX_QUESTIONS) {
+          // Don't transition state here, wait for proceedToNextStep
+          setIsSubmittingAiAnswer(false);
+        } else {
+          // Prepare for the next question, but don't clear feedback/selection yet
+          setCurrentAiQuestion(data);
+          setIsSubmittingAiAnswer(false);
+        }
+        // --- End of removed setTimeout logic ---
       } else {
         // Start of AI quiz
         setCurrentAiQuestion(data);
@@ -152,15 +148,15 @@ export function useQuiz({ quizzes, feedbackDelay = 1000 }: UseQuizOptions) {
       setIsCorrect(null);
       setIsSubmittingAiAnswer(false);
     }
-  }, [feedbackDelay, aiTotalAnswered]); // Add aiTotalAnswered dependency
+  }, [aiTotalAnswered]); // Removed feedbackDelay dependency
 
   const submitAnswer = () => {
     if (isAiQuiz) {
+      // AI quiz submission
       if (!selectedAnswer || !currentAiTopic || !currentAiQuestion || isSubmittingAiAnswer || showFeedback) return;
 
       // Prevent submission if we've already reached the max questions (edge case)
       if (aiTotalAnswered >= MAX_QUESTIONS) {
-        setQuizState("results");
         return;
       }
 
@@ -181,20 +177,30 @@ export function useQuiz({ quizzes, feedbackDelay = 1000 }: UseQuizOptions) {
 
       const correct = selectedAnswer === currentQuestion.correctAnswer;
       setIsCorrect(correct);
-      setShowFeedback(true);
+      setShowFeedback(true); // Show feedback
+    }
+  };
 
-      setTimeout(() => {
-        setShowFeedback(false);
-        setIsCorrect(null);
+  // --- New function to proceed after feedback ---
+  const proceedToNextStep = () => {
+    if (!showFeedback) return; // Only proceed if feedback is showing
 
-        // Check against totalQuestions which respects MAX_QUESTIONS
-        if (currentQuestionIndex < totalQuestions - 1) {
-          setCurrentQuestionIndex(currentQuestionIndex + 1);
-          setSelectedAnswer(null);
-        } else {
-          setQuizState("results");
-        }
-      }, feedbackDelay);
+    setShowFeedback(false);
+    setIsCorrect(null);
+    setSelectedAnswer(null); // Clear selection for the next question
+
+    if (isAiQuiz) {
+      // Check if max questions reached *now* before proceeding
+      if (aiTotalAnswered >= MAX_QUESTIONS) {
+        setQuizState("results");
+      }
+    } else {
+      // Predefined Quiz
+      if (currentQuestionIndex < totalQuestions - 1) {
+        setCurrentQuestionIndex(currentQuestionIndex + 1);
+      } else {
+        setQuizState("results");
+      }
     }
   };
 
@@ -315,6 +321,7 @@ export function useQuiz({ quizzes, feedbackDelay = 1000 }: UseQuizOptions) {
       startQuiz,
       handleAnswerSelect,
       submitAnswer,
+      proceedToNextStep, // <-- Add the new action
       restartQuiz,
       returnToSelection,
     },
