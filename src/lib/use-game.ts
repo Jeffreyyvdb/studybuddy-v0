@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { NpcObject, QuizQuestion, FeedbackType } from "../types/game";
 import { Message } from "ai";
+import confetti from 'canvas-confetti';
 
 // Different NPC types
 const defaultNpcTypes = ["🧙", "👩‍🏫", "👨‍🔬", "🧑‍⚕️", "👮"];
@@ -373,6 +374,7 @@ export function useGame({
         } else {
           if (result.previousResponseCorrect) {
             setScore((prev) => prev + 10);
+            triggerConfetti(); // Trigger confetti for correct answer
           }
           setFeedbackMessage(result.explanation);
           setFeedbackType(result.previousResponseCorrect ? "correct" : "incorrect");
@@ -461,4 +463,23 @@ export function useGame({
     handleMobileButtonRelease,
     submitAnswerToAI,
   };
+}
+
+// Function to trigger confetti
+function triggerConfetti() {
+  confetti({
+    particleCount: 100,
+    spread: 70,
+    origin: { y: 0.6 },
+  });
+}
+
+// Example usage: Call this function when the answer is correct
+function handleAnswer(isCorrect) {
+  if (isCorrect) {
+    triggerConfetti();
+    console.log('Correct answer!');
+  } else {
+    console.log('Try again!');
+  }
 }
