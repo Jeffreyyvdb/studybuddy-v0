@@ -22,6 +22,10 @@ interface QuizQuestionProps {
   onSelectAnswer: (answer: string) => void;
   onSubmitAnswer: () => void;
   onCancelQuiz: () => void;
+  isSubmittingAnswer: boolean; // Add prop for loading state
+  isAiQuiz?: boolean; // Add isAiQuiz property
+  aiQuestionType?: "open" | "multiple_choice";
+  aiExplanation?: string;
 }
 
 export function QuizQuestion({
@@ -34,6 +38,7 @@ export function QuizQuestion({
   onSelectAnswer,
   onSubmitAnswer,
   onCancelQuiz,
+  isSubmittingAnswer, // Destructure the new prop
 }: QuizQuestionProps) {
   const progress = ((currentIndex + 1) / totalQuestions) * 100;
 
@@ -52,9 +57,9 @@ export function QuizQuestion({
         </div>
 
         {/* Card with title at top, options and buttons at bottom */}
-        <Card className="flex flex-col flex-1">
+        <Card className="flex flex-col bg-transparent">
           <CardHeader>
-            <div className="flex ">
+            <div className="flex">
               <CardTitle className="text-3xl flex-grow">
                 {question.question}
               </CardTitle>
@@ -64,7 +69,7 @@ export function QuizQuestion({
             </div>
           </CardHeader>
 
-          <div className="mt-auto">
+          <div className="">
             <CardContent>
               <RadioGroup
                 value={selectedAnswer}
@@ -121,11 +126,13 @@ export function QuizQuestion({
             <CardFooter>
               <Button
                 onClick={onSubmitAnswer}
-                disabled={!selectedAnswer || showFeedback}
+                disabled={!selectedAnswer || showFeedback || isSubmittingAnswer} // Disable when submitting
                 size="lg"
                 className="text-lg w-full"
               >
-                {showFeedback
+                {isSubmittingAnswer // Show loading text when submitting
+                  ? "Checking your answer..."
+                  : showFeedback
                   ? isCorrect
                     ? "Correct! ✓"
                     : "Incorrect! ✗"
