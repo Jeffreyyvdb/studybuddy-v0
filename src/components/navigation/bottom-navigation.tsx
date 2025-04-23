@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { NavItem } from "./nav-item";
-import { User, Bot, GraduationCap } from "lucide-react";
+import { User, Bot, GraduationCap, Gamepad } from "lucide-react";
 import { ModeToggle } from "../ui/mode-toggle";
 import { useUI } from "@/lib/ui-context";
 
@@ -21,6 +21,11 @@ const navItems = [
     href: "/profile",
     label: "Profile",
     icon: <User className="h-5 w-5" />,
+  },
+  {
+    href: "/game",
+    label: "Game",
+    icon: <Gamepad className="h-5 w-5" />,
   },
 ];
 
