@@ -43,6 +43,7 @@ export function useGame({
   // Game state
   const [position, setPosition] = useState(0);
   const [isMoving, setIsMoving] = useState(false);
+  const [isAnswering] = useState(false);
   const [direction, setDirection] = useState(0);
   const [score, setScore] = useState(0);
   const [distance, setDistance] = useState(0);
@@ -127,7 +128,7 @@ export function useGame({
           // Handle case where AI doesn't provide a next question (e.g., end of topic)
           console.warn("AI did not provide a next question or format is invalid.");
           setFeedbackMessage("Looks like that's all the questions for now!");
-          setFeedbackType("info"); // Use a neutral feedback type
+          setFeedbackType("incorrect"); // Use a neutral feedback type
           setActiveNpc(null); // End interaction immediately
           // Mark NPC as answered even if no question was asked, to avoid re-triggering
           setNpcs((prev) =>
@@ -443,6 +444,7 @@ export function useGame({
   return {
     position,
     isMoving,
+    isAnswering,
     direction,
     score,
     distance,
