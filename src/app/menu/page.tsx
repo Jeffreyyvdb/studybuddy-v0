@@ -2,9 +2,7 @@
 
 import React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { File, Files } from "lucide-react";
 
 export default function GameModePage() {
   const router = useRouter();
@@ -68,10 +66,6 @@ export default function GameModePage() {
             </Button>
           ))}
         </div>
-      </div>
-
-      <div className="h-16 bg-green-400 fixed bottom-0 left-0 right-0">
-        {/* Bottom green bar */}
       </div>
     </div>
   );
