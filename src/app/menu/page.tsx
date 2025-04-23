@@ -1,13 +1,11 @@
 "use client";
 
 import React from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
 export default function GameModePage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const subject = searchParams.get("subject") || "history";
 
   const studyOptions = [
     {
@@ -39,7 +37,7 @@ export default function GameModePage() {
   const handleOptionClick = (optionId: string, available: boolean) => {
     if (!available) return;
 
-    router.push(`/game?mode=${optionId}&subject=${subject}`);
+    router.push(`/game`);
   };
 
   return (
