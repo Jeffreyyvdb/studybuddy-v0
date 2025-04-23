@@ -9,10 +9,15 @@ import { MobileControls } from "@/components/game/mobile-controls";
 import { QuestionPopup } from "@/components/game/question-popup";
 import { FeedbackMessage } from "@/components/game/feedback-message";
 import { useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 
 const Game = () => {
-  // Using our custom hook for game logic
-  const game = useGame();
+  // Get the subject from URL query parameters
+  const searchParams = useSearchParams();
+  const subject = searchParams.get("subject") || "General Knowledge";
+
+  // Using our custom hook for game logic with the subject from URL
+  const game = useGame({ subject });
 
   // Add touch event listeners for mobile devices
   useEffect(() => {

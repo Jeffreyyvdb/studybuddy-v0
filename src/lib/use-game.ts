@@ -12,6 +12,7 @@ interface UseGameOptions {
   movementSpeed?: number;
   worldWidth?: number;
   feedbackDuration?: number;
+  subject?: string; // Add subject option
 }
 
 // Define expected AI response structure for game questions
@@ -39,6 +40,7 @@ export function useGame({
   movementSpeed = 3,
   worldWidth = 5000,
   feedbackDuration = 2000,
+  subject = "General Knowledge", // Default subject
 }: UseGameOptions = {}) {
   // Game state
   const [position, setPosition] = useState(0);
@@ -91,11 +93,13 @@ export function useGame({
       const nextQuestionPrompt: Omit<Message, "id"> = {
         role: "user",
         // Ask for the next question based on the existing conversation
-        content: "Based on our previous conversation, please provide the next quiz question.",
+        content:
+          "Based on our previous conversation, please provide the next quiz question.",
       };
 
       if (!messageHistory || messageHistory.length === 0) {
-        nextQuestionPrompt.content = "Start a quiz about math. Give me a question.";
+        // Use the subject parameter to specify the quiz topic
+        nextQuestionPrompt.content = `Start a quiz about ${subject}. Give me a question.`;
       }
 
       // Send the existing history PLUS the new prompt
@@ -126,7 +130,9 @@ export function useGame({
           !nextQuestionData.options
         ) {
           // Handle case where AI doesn't provide a next question (e.g., end of topic)
-          console.warn("AI did not provide a next question or format is invalid.");
+          console.warn(
+            "AI did not provide a next question or format is invalid."
+          );
           setFeedbackMessage("Looks like that's all the questions for now!");
           setFeedbackType("incorrect"); // Use a neutral feedback type
           setActiveNpc(null); // End interaction immediately
@@ -160,7 +166,9 @@ export function useGame({
         }
       } catch (error) {
         console.error("Error fetching next question:", error);
-        setFeedbackMessage("Error getting the next question. Please try again.");
+        setFeedbackMessage(
+          "Error getting the next question. Please try again."
+        );
         setFeedbackType("error");
         setActiveNpc(null);
         setQuestions([]);
@@ -177,7 +185,8 @@ export function useGame({
       isFetchingQuestion,
       isSubmittingAnswer,
       feedbackDuration,
-      messageHistory, // Add messageHistory as a dependency
+      messageHistory,
+      subject, // Add subject as dependency
     ]
   );
 
@@ -317,25 +326,35 @@ export function useGame({
   // Modified function to submit answer, get feedback, and end interaction
   const submitAnswerToAI = useCallback(
     async (selectedAnswer: string) => {
-      if (!currentQuestion || !activeNpc || isSubmittingAnswer || isFetchingQuestion) return;
+      if (
+        !currentQuestion ||
+        !activeNpc ||
+        isSubmittingAnswer ||
+        isFetchingQuestion
+      )
+        return;
 
       setIsSubmittingAnswer(true);
       setFeedbackMessage(null);
       setFeedbackType(null);
 
       // 1. Create user messages for this turn
-      const userAnswerMessage: Omit<Message, 'id'> = {
+      const userAnswerMessage: Omit<Message, "id"> = {
         role: "user",
-        content: `My answer to question ID ${currentQuestion.id} is: ${selectedAnswer}`
+        content: `My answer to question ID ${currentQuestion.id} is: ${selectedAnswer}`,
       };
       // Modify prompt: Only ask for feedback
-      const userPromptMessage: Omit<Message, 'id'> = {
+      const userPromptMessage: Omit<Message, "id"> = {
         role: "user",
-        content: "Give me feedback on my answer." // Changed prompt
+        content: "Give me feedback on my answer.", // Changed prompt
       };
 
       // 2. Create the history to be sent (append to existing history)
-      const historyToSend = [...messageHistory, userAnswerMessage as Message, userPromptMessage as Message];
+      const historyToSend = [
+        ...messageHistory,
+        userAnswerMessage as Message,
+        userPromptMessage as Message,
+      ];
 
       // 3. Update the state *before* the API call
       setMessageHistory(historyToSend);
@@ -354,20 +373,26 @@ export function useGame({
         }
 
         // Expecting feedback, potentially without a next question
-        const result = await response.json() as AIGameFeedbackResponse; // Use FeedbackResponse interface
+        const result = (await response.json()) as AIGameFeedbackResponse; // Use FeedbackResponse interface
         console.log("AI Feedback Response:", result);
 
         // 4. Add AI response to history
-        const aiResponseMessage: Omit<Message, 'id'> = {
+        const aiResponseMessage: Omit<Message, "id"> = {
           role: "assistant",
-          content: JSON.stringify(result) // Store the raw feedback response
+          content: JSON.stringify(result), // Store the raw feedback response
         };
         // Append AI feedback to the history
-        setMessageHistory(prev => [...prev, aiResponseMessage as Message]);
+        setMessageHistory((prev) => [...prev, aiResponseMessage as Message]);
 
         // --- Process Feedback ---
-        if (result.explanation === undefined || result.previousResponseCorrect === undefined) {
-          console.warn("API response missing required feedback fields.", result);
+        if (
+          result.explanation === undefined ||
+          result.previousResponseCorrect === undefined
+        ) {
+          console.warn(
+            "API response missing required feedback fields.",
+            result
+          );
           setFeedbackMessage("Feedback processing error.");
           setFeedbackType("error");
         } else {
@@ -375,7 +400,9 @@ export function useGame({
             setScore((prev) => prev + 10);
           }
           setFeedbackMessage(result.explanation);
-          setFeedbackType(result.previousResponseCorrect ? "correct" : "incorrect");
+          setFeedbackType(
+            result.previousResponseCorrect ? "correct" : "incorrect"
+          );
         }
 
         // --- End Interaction with this NPC (Always happens after feedback for single question) ---
