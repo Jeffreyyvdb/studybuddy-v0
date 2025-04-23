@@ -26,8 +26,8 @@ export const Player: React.FC<PlayerProps> = ({ direction, isMoving }) => {
         <Image
           src="/images/study-buddy.png"
           alt="Study Buddy character"
-          width={100}
-          height={100}
+          width={1024}
+          height={1024}
           priority
           className="object-contain"
           style={getTransformStyle()}

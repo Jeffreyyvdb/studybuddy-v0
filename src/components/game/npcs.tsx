@@ -1,4 +1,5 @@
 import React from "react";
+import Image from "next/image";
 import { NpcObject } from "../../types/game";
 
 interface NPCsProps {
@@ -12,7 +13,7 @@ export const NPCs: React.FC<NPCsProps> = ({ npcs, interactionDistance }) => {
       {npcs.map((npc) => (
         <div
           key={npc.id}
-          className="absolute bottom-20"
+          className="absolute bottom-18"
           style={{
             left: `calc(50% + ${npc.screenPosition}px)`,
             transform: "translateX(-50%)",
@@ -21,12 +22,15 @@ export const NPCs: React.FC<NPCsProps> = ({ npcs, interactionDistance }) => {
           }}
         >
           <div className="flex flex-col items-center">
-            <div
-              className={`w-14 h-14 ${
-                npc.answered ? "bg-gray-400" : "bg-yellow-400"
-              } rounded-full flex items-center justify-center`}
-            >
-              <span className="text-2xl">{npc.character}</span>
+            <div className="w-40 h-40 flex items-center jus\tify-center">
+              <Image
+                src="/images/robotV0.1-02.png"
+                alt={`NPC ${npc.character}`}
+                width={5417}
+                height={5417}
+                priority
+                className="object-contain"
+              />
             </div>
             {!npc.answered &&
               Math.abs(npc.screenPosition) < interactionDistance && (

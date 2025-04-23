@@ -34,6 +34,22 @@ export const GameBackground: React.FC<GameBackgroundProps> = ({ position }) => {
           background-size: inherit;
           background-position-x: var(--bg-position);
         }
+        /* Add an overlay to reduce vibrancy and darken */
+        div::after {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: rgba(
+            255,
+            255,
+            255,
+            0.6
+          ); /* dark overlay with 30% opacity */
+          pointer-events: none;
+        }
       `}</style>
     </div>
   );

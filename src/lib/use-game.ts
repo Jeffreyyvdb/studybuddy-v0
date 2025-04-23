@@ -51,7 +51,7 @@ interface UseGameOptions {
 export function useGame({
   questions = defaultQuestions,
   npcTypes = defaultNpcTypes,
-  npcSpawnInterval = 150,
+  npcSpawnInterval = 450,
   npcInteractionDistance = 50,
   movementSpeed = 3,
   worldWidth = 5000,
