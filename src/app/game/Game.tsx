@@ -58,7 +58,6 @@ const Game = () => {
       {game.currentQuestion && game.activeNpc && (
         <QuestionPopup
           question={game.currentQuestion}
-          npc={game.activeNpc}
           onAnswer={game.submitAnswerToAI} // Use the new AI handler
           isAnswering={game.isAnswering} // Pass loading state
         />

@@ -1,18 +1,16 @@
 import React, { useState } from "react"; // Import useState
-import { NpcObject, QuizQuestion } from "../../types/game";
+import { QuizQuestion } from "../../types/game";
 import { Input } from "@/components/ui/input"; // Import Input component
 import { Button } from "@/components/ui/button"; // Import Button component
 
 interface QuestionPopupProps {
   question: QuizQuestion;
-  npc: NpcObject;
   onAnswer: (answer: string) => void;
   isAnswering: boolean;
 }
 
 export const QuestionPopup: React.FC<QuestionPopupProps> = ({
   question,
-  npc,
   onAnswer,
   isAnswering,
 }) => {

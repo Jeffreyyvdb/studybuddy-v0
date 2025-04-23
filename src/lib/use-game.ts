@@ -147,6 +147,7 @@ export function useGame({
             // Reset feedback fields for the new question
             explanation: "",
             previousResponseCorrect: undefined,
+            tag: ""
           };
           setQuestions([nextQuestion]); // Set this as the current question for the NPC
 
