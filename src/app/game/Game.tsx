@@ -8,6 +8,7 @@ import { NPCs } from "@/components/game/npcs";
 import { MobileControls } from "@/components/game/mobile-controls";
 import { QuestionPopup } from "@/components/game/question-popup";
 import { FeedbackMessage } from "@/components/game/feedback-message";
+import { LoadingQuestion } from "@/components/game/loading-question";
 import { useEffect } from "react";
 
 const Game = () => {
@@ -53,6 +54,9 @@ const Game = () => {
         onButtonPress={game.handleMobileButtonPress}
         onButtonRelease={game.handleMobileButtonRelease}
       />
+
+      {/* Loading indicator for AI questions */}
+      {game.isLoadingQuestion && <LoadingQuestion />}
 
       {/* Question popup */}
       {game.currentQuestion && game.activeNpc && (
