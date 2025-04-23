@@ -11,7 +11,7 @@ import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Input } from "@/components/ui/input";
 import { QuizQuestion as QuestionType } from "@/data/history-questions";
-import { AIQuizResponse } from "@/lib/use-quiz-types";
+import { AIQuizResponse } from "@/lib/quiz-types";
 import { Check, X } from "lucide-react";
 
 type DisplayQuestion = QuestionType | (Omit<AIQuizResponse, 'options' | 'previousResponseCorrect' | 'tag'> & { id: string; correctAnswer?: string });

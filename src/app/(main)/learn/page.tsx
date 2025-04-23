@@ -6,7 +6,7 @@ import { QuizResults } from "@/components/quiz/quiz-results";
 import { QuizSelection } from "@/components/quiz/quiz-selection";
 import { quizzes } from "@/data/quizzes";
 import { useQuiz } from "@/lib/use-quiz";
-import { AIQuizResponse } from "@/lib/use-quiz-types"; // Import AIQuizResponse
+import { AIQuizResponse } from "@/lib/quiz-types"; // Import AIQuizResponse
 import { QuizQuestion as QuestionType } from "@/data/history-questions"; // Import QuestionType if needed for casting
 
 export default function LearnPage() {

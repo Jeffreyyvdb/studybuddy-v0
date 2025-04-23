@@ -8,15 +8,15 @@ import { MessageList } from "@/components/chat/message-list";
 import { ChatInput } from "@/components/chat/chat-input";
 
 export default function Chat() {
-  // For normal operation with AI
+  // Destructure setInput from useChat
   const {
     messages: aiMessages,
     input,
     handleInputChange,
     handleSubmit,
+    setInput, // Add setInput here
   } = useChat();
 
-  // For debugging with sample messages
   const [debugMode, setDebugMode] = useState(false);
   const messages = debugMode ? sampleMessages : aiMessages;
 
@@ -25,9 +25,12 @@ export default function Chat() {
 
     if (!input.trim()) return;
 
-    // Only call handleSubmit if not in debug mode
     if (!debugMode) {
-      handleSubmit(e);
+      handleSubmit(e); // This already clears the input
+    } else {
+      // Manually clear the input in debug mode
+      console.log("Debug mode: Simulating send, clearing input."); // Optional: log for clarity
+      setInput(""); // Clear the input state
     }
   };
 
@@ -38,7 +41,7 @@ export default function Chat() {
       <ChatInput
         input={input}
         handleInputChange={handleInputChange}
-        onSubmit={onSubmit}
+        onSubmit={onSubmit} // Pass the updated onSubmit handler
       />
     </div>
   );
