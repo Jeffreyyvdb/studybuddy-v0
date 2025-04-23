@@ -26,34 +26,26 @@ export const QuestionPopup: React.FC<QuestionPopupProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-40 bg-black/70">
-      <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl relative">
-        <div className="flex justify-center mb-4">
-          <div className="w-16 h-16 bg-yellow-400 rounded-full flex items-center justify-center shadow-lg">
-            <span className="text-3xl">{npc.character}</span>
-          </div>
-        </div>
-        <h2 className="text-xl font-bold mb-4 text-gray-800">
+    <div className="fixed top-15 flex w-full items-center justify-center z-40">
+      <div className="p-6 max-w-md w-full relative">
+        <h2 className="text-md font-bold mb-4 text-gray-800">
           {question.question}
         </h2>
 
         {/* Conditional Rendering: Multiple Choice vs Open Question */}
         {question.options && question.options.length > 0 ? (
           // Multiple Choice Options
-          <div className="space-y-2">
+          <div className="flex flex-col space-y-2">
             {question.options.map((option) => (
-              <button
+              <Button
                 key={option}
-                className={`w-full py-3 px-4 rounded-lg text-left font-medium transition-colors ${
-                  isAnswering
-                    ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                    : "bg-blue-100 hover:bg-blue-200"
-                }`}
+                className="bg-white"
+                size={"lg"}
                 onClick={() => onAnswer(option)}
                 disabled={isAnswering}
               >
                 {option}
-              </button>
+              </Button>
             ))}
           </div>
         ) : (
@@ -71,6 +63,7 @@ export const QuestionPopup: React.FC<QuestionPopupProps> = ({
               onClick={handleOpenAnswerSubmit}
               disabled={isAnswering || !openAnswer.trim()}
               className="w-full"
+              size={"lg"}
             >
               {isAnswering ? "Submitting..." : "Submit Answer"}
             </Button>
