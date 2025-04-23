@@ -2,14 +2,15 @@
 
 import { usePathname } from "next/navigation";
 import { NavItem } from "./nav-item";
-import { User, Bot, Home } from "lucide-react";
+import { User, Bot, GraduationCap } from "lucide-react";
 import { ModeToggle } from "../ui/mode-toggle";
+import { useUI } from "@/lib/ui-context";
 
 const navItems = [
   {
-    href: "/",
-    label: "Home",
-    icon: <Home className="h-5 w-5"> </Home>,
+    href: "/learn",
+    label: "Learn",
+    icon: <GraduationCap className="h-5 w-5"> </GraduationCap>,
   },
   {
     href: "/chat",
@@ -25,10 +26,14 @@ const navItems = [
 
 export function BottomNavigation() {
   const pathname = usePathname();
+  const { navBarsVisible } = useUI();
+
+  // Don't render the BottomNavigation if it should be hidden
+  if (!navBarsVisible) return null;
 
   return (
     <div className="fixed bottom-0 left-0 right-0 border-t border-border bg-background z-10">
-      <nav className="h-16 max-w-screen-lg mx-auto  px-4">
+      <nav className="h-16 max-w-screen-lg mx-auto px-4">
         <ul className="flex items-center justify-around h-full">
           {navItems.map((item) => (
             <NavItem
