@@ -21,6 +21,7 @@ interface AIGameQuestionResponse {
   id: number | string;
   previousResponseCorrect?: boolean; // Make optional as it might not be in the first response
   explanation?: string; // Make optional
+  tag: string; // Tag for AI questions
 }
 
 // Define expected AI response structure for game feedback
@@ -146,8 +147,7 @@ export function useGame({
             correctAnswer: "", // Assuming multiple choice answers aren't needed upfront
             // Reset feedback fields for the new question
             explanation: "",
-            previousResponseCorrect: undefined,
-            tag: ""
+            previousResponseCorrect: undefined
           };
           setQuestions([nextQuestion]); // Set this as the current question for the NPC
 

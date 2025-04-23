@@ -35,8 +35,8 @@ export const NPCs: React.FC<NPCsProps> = ({ npcs, interactionDistance }) => {
             {!npc.answered &&
               Math.abs(npc.screenPosition) < interactionDistance && (
                 <div className="mt-2 animate-bounce">
-                  <span className="text-white bg-blue-600 px-2 py-1 rounded-full text-xs font-bold">
-                    !
+                  <span className="text-white bg-primary px-2 py-1 rounded-full text-xs font-bold">
+                    ?
                   </span>
                 </div>
               )}

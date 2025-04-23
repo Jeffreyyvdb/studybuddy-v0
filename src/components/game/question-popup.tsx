@@ -32,10 +32,12 @@ export const QuestionPopup: React.FC<QuestionPopupProps> = ({
   };
 
   return (
-    <div className="fixed top-15 flex w-full items-center justify-center z-40">
+    <div className="fixed top-15 flex w-full items-center justify-start z-40">
       <div className="p-6 max-w-md w-full relative">
+        <span className="text-accent">{question.tag}</span>
+
         {/* Keep the question text without the outline */}
-        <h2 className="text-md font-bold mb-4 text-gray-800 p-2 rounded">
+        <h2 className="text-md font-bold mb-4 text-gray-800">
           {question.question}
         </h2>
 
