@@ -213,7 +213,7 @@ export function useGame({
           // Process the received question
           const nextQuestion: QuizQuestion = {
             ...nextQuestionData,
-            correctAnswer: nextQuestionData.correctAnswer || "", 
+            correctAnswer: "", 
             // Reset feedback fields for the new question
             explanation: "",
             previousResponseCorrect: undefined,
@@ -596,6 +596,7 @@ export function useGame({
     [
       currentQuestion,
       activeNpc,
+      feedbackDuration,
       isSubmittingAnswer,
       isFetchingQuestion,
       messageHistory,

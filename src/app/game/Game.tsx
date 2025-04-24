@@ -6,7 +6,6 @@ import { useGame } from "@/lib/use-game";
 import { GameBackground } from "@/components/game/game-background";
 import { Player } from "@/components/game/player";
 import { NPCs } from "@/components/game/npcs";
-import { GameUI } from "@/components/game/game-ui";
 import { QuestionPopup } from "@/components/game/question-popup";
 import { FeedbackMessage } from "@/components/game/feedback-message";
 import { MobileControls } from "@/components/game/mobile-controls";
@@ -22,7 +21,6 @@ export default function Game() {
     isMoving,
     direction,
     score,
-    distance,
     currentQuestion,
     feedbackMessage,
     feedbackType,
