@@ -15,10 +15,10 @@ export const FeedbackMessage: React.FC<FeedbackMessageProps> = ({
   return (
     <div className="px-6 max-w-md flex items-center justify-center pointer-events-none">
       <div
-        className={`py-4 px-8 rounded-lg text-xl font-bold ${
+        className={`py-4 px-8 rounded-lg font-bold ${
           type === "correct"
             ? "bg-green-500 text-white"
-            : "bg-red-500 text-white"
+            : "bg-orange-500 text-white"
         }`}
       >
         {message}

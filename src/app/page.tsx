@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 
 export default function GameModePage() {
@@ -35,17 +36,31 @@ export default function GameModePage() {
               className="text-xl w-full justify-start relative h-16 border-0 shadow-none bg-white"
               variant={"outline"}
             >
-              <div className="absolute left-4">📁</div>
+              <div className="absolute left-4 w-6 h-6">
+                <Image
+                  src="/images/file.png"
+                  alt="Study"
+                  width={160}
+                  height={160}
+                />
+              </div>
               <div className="flex-1 text-center">Study</div>
             </Button>
           </Link>
 
           <Link href="/game" className="w-full">
             <Button
-              className="text-xl w-full justify-start relative h-16  border-0 shadow-none bg-white"
+              className="text-xl w-full justify-start relative h-16 border-0 shadow-none bg-white"
               variant={"outline"}
             >
-              <div className="absolute left-4">✏️</div>
+              <div className="absolute left-4 w-6 h-6">
+                <Image
+                  src="/images/pen.png"
+                  alt="Train for exam"
+                  width={126}
+                  height={126}
+                />
+              </div>
               <div className="flex-1 text-center">Train for exam</div>
             </Button>
           </Link>
@@ -53,23 +68,36 @@ export default function GameModePage() {
           <div className="w-full">
             <Button
               variant={"outline"}
-              className="text-xl w-full justify-start relative h-16 opacity-60  border-0 shadow-none bg-white"
+              className="text-xl w-full justify-start relative h-16 opacity-60 border-0 shadow-none bg-white"
               disabled={true}
             >
-              <div className="absolute left-4">🏆</div>
+              <div className="absolute left-4 w-6 h-6">
+                <Image
+                  src="/images/beker.png"
+                  alt="Challenge"
+                  width={208}
+                  height={208}
+                />
+              </div>
               <div className="flex-1 text-center">
                 Challenge your classmates
               </div>
-              <span className="absolute right-4">🔒</span>
             </Button>
           </div>
 
           <Link href="/game" className="w-full">
             <Button
-              className="text-xl w-full justify-start relative h-16  border-0 shadow-none bg-white"
+              className="text-xl w-full justify-start relative h-16 border-0 shadow-none bg-white"
               variant={"outline"}
             >
-              <div className="absolute left-4">🥇</div>
+              <div className="absolute left-4 w-6 h-6">
+                <Image
+                  src="/images/medal.png"
+                  alt="Medals and progress"
+                  width={277}
+                  height={394}
+                />
+              </div>
               <div className="flex-1 text-center">My medals and progress</div>
             </Button>
           </Link>

@@ -50,7 +50,7 @@ export const QuestionPopup: React.FC<QuestionPopupProps> = ({
               // Apply outline if this option is the selected one
               className={`bg-white ${
                 selectedAnswer === option
-                  ? "border-4 border-primary" // Add outline class if selected
+                  ? "border-4 border-blue-500" // Add outline class if selected
                   : ""
               }`}
               size={"lg"}

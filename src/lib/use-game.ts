@@ -38,11 +38,11 @@ interface AIGameFeedbackResponse {
 export function useGame({
   npcTypes = defaultNpcTypes,
   npcSpawnInterval = 450,
-  npcInteractionDistance = 50,
+  npcInteractionDistance = 100,
   movementSpeed = 3,
   worldWidth = 5000,
   subject = "General Knowledge", // Default subject
-  feedbackDuration = 8000
+  feedbackDuration = 8000,
 }: UseGameOptions = {}) {
   // Game state
   const [position, setPosition] = useState(0);
