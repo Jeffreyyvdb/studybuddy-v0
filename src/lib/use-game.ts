@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { NpcObject, QuizQuestion, FeedbackType } from "../types/game";
 import { Message } from "ai";
 import confetti from "canvas-confetti";
@@ -60,6 +60,8 @@ export function useGame({
   const [messageHistory, setMessageHistory] = useState<Message[]>([]);
   const [isGameFinished, setIsGameFinished] = useState(false); // New state for game completion
   const [answeredCount, setAnsweredCount] = useState(0); // Track answered NPCs
+  const [feedbackTimeRemaining, setFeedbackTimeRemaining] = useState(0); // New state for feedback timer
+  const feedbackTimerRef = useRef<NodeJS.Timeout | null>(null); // Reference to track the timer
 
   const currentQuestion =
     questions.length > 0 ? questions[questions.length - 1] : null;
@@ -428,6 +430,50 @@ export function useGame({
     setDirection(0);
   }, []);
 
+  // Helper function to show feedback message with timer
+  const showFeedbackWithTimer = useCallback((message: string, type: FeedbackType) => {
+    // Clear any existing timer
+    if (feedbackTimerRef.current) {
+      clearInterval(feedbackTimerRef.current);
+      feedbackTimerRef.current = null;
+    }
+    
+    setFeedbackMessage(message);
+    setFeedbackType(type);
+    setFeedbackTimeRemaining(feedbackDuration);
+    
+    // Start a timer that updates every 100ms
+    const startTime = Date.now();
+    feedbackTimerRef.current = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const remaining = Math.max(0, feedbackDuration - elapsed);
+      setFeedbackTimeRemaining(remaining);
+      
+      if (remaining <= 0) {
+        clearInterval(feedbackTimerRef.current!);
+        feedbackTimerRef.current = null;
+        setFeedbackMessage(null);
+        setFeedbackType(null);
+        setFeedbackTimeRemaining(0);
+      }
+    }, 100);
+    
+    return () => {
+      if (feedbackTimerRef.current) {
+        clearInterval(feedbackTimerRef.current);
+      }
+    };
+  }, [feedbackDuration]);
+
+  // Clean up timer on unmount
+  useEffect(() => {
+    return () => {
+      if (feedbackTimerRef.current) {
+        clearInterval(feedbackTimerRef.current);
+      }
+    };
+  }, []);
+
   // Modified function to submit answer, get feedback, and check for game end
   const submitAnswerToAI = useCallback(
     async (selectedAnswer: string) => {
@@ -500,22 +546,17 @@ export function useGame({
           result.previousResponseCorrect === undefined
         ) {
           console.warn("API response missing required feedback fields.", result);
-          setFeedbackMessage("Feedback processing error.");
-          setFeedbackType("error");
+          showFeedbackWithTimer("Feedback processing error.", "error");
         } else {
           if (result.previousResponseCorrect) {
             setScore((prev) => prev + 10);
             triggerConfetti(); // Trigger confetti for correct answer
           }
-          setFeedbackMessage(result.explanation);
-          setFeedbackType(
-            result.previousResponseCorrect ? "correct" : "incorrect"
-          );
+          showFeedbackWithTimer(result.explanation, result.previousResponseCorrect ? "correct" : "incorrect");
         }
       } catch (error) {
         console.error("Error submitting answer to AI:", error);
-        setFeedbackMessage("Error evaluating answer. Please try again.");
-        setFeedbackType("error");
+        showFeedbackWithTimer("Error evaluating answer. Please try again.", "error");
       } finally {
         // --- End Interaction with this NPC (Always happens after feedback/error) ---
         // Ensure NPC is marked answered only once per interaction attempt
@@ -534,23 +575,21 @@ export function useGame({
 
         // Clear interaction state after feedback duration
         setTimeout(() => {
-          setFeedbackMessage(null);
-          setFeedbackType(null);
-          setQuestions([]); // Clear questions
-          setActiveNpc(null);
-          setIsSubmittingAnswer(false);
-          // messageHistory persists
+        setQuestions([]); // Clear questions
+        setActiveNpc(null);
+        setIsSubmittingAnswer(false);
+        // messageHistory persists
 
-          // Check if the game is finished *after* clearing state and incrementing count
-          // Use a callback with setAnsweredCount to ensure we check with the updated value
-          setAnsweredCount((currentCount) => {
-            console.log(`Checking game end: Answered ${currentCount}/${TOTAL_NPCS}`);
-            if (currentCount >= TOTAL_NPCS) {
-              console.log("Game finished!");
-              setIsGameFinished(true);
-            }
-            return currentCount; // Return the current count for the state update
-          });
+        // Check if the game is finished *after* clearing state and incrementing count
+// Use a callback with setAnsweredCount to ensure we check with the updated value
+        setAnsweredCount((currentCount) => {
+          console.log(`Checking game end: Answered ${currentCount}/${TOTAL_NPCS}`);
+          if (currentCount >= TOTAL_NPCS) {
+            console.log("Game finished!");
+            setIsGameFinished(true);
+          }
+          return currentCount; // Return the current count for the state update
+        });
         }, feedbackDuration);
       }
     },
@@ -559,9 +598,9 @@ export function useGame({
       activeNpc,
       isSubmittingAnswer,
       isFetchingQuestion,
-      feedbackDuration,
       messageHistory,
-      isGameFinished, // Add dependency
+      isGameFinished,
+      showFeedbackWithTimer, // Add the new callback
     ]
   );
 
@@ -603,6 +642,8 @@ export function useGame({
     isGameFinished, // Expose the game finished state
     totalNpcs: TOTAL_NPCS, // Expose total NPCs
     answeredCount, // Expose answered count
+    feedbackTimeRemaining, // Expose the timer state for the UI
+    feedbackDuration, // Expose total duration for calculations
   };
 }
 

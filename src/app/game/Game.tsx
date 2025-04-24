@@ -35,6 +35,8 @@ export default function Game() {
     submitAnswerToAI,
     isGameFinished,
     totalNpcs,
+    feedbackTimeRemaining,
+    feedbackDuration
   } = useGame({ subject });
 
   // These functions are needed for QuizResults
@@ -80,7 +82,12 @@ export default function Game() {
         )}
 
         {feedbackMessage && (
-          <FeedbackMessage message={feedbackMessage} type={feedbackType} />
+          <FeedbackMessage 
+            message={feedbackMessage} 
+            type={feedbackType} 
+            timeRemaining={feedbackTimeRemaining}
+            totalDuration={feedbackDuration}
+          />
         )}
       </div>
 
