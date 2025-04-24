@@ -1,14 +1,16 @@
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function SelectSubject() {
   const subjects = [
-    { id: 1, name: "Mathematics" },
-    { id: 2, name: "Science" },
-    { id: 3, name: "History" },
-    { id: 4, name: "English" },
-    { id: 5, name: "Computer Science" },
-    { id: 6, name: "Geography" },
+    { id: 3, name: "History", imagePath: "/images/history.png" },
+    { id: 4, name: "English", imagePath: "/images/english.png" },
+    { id: 1, name: "Math", imagePath: "/images/math.png" },
+    { id: 9, name: "French", imagePath: "/images/french.png" },
+    { id: 2, name: "Science", imagePath: "/images/science.png" },
+
+    { id: 6, name: "Geography", imagePath: "/images/geography.png" },
     // Add more subjects as needed
   ];
 
@@ -42,10 +44,21 @@ export default function SelectSubject() {
               className="w-full"
             >
               <Button
-                className="font-medium py-8 px-6 rounded-lg w-full flex items-center justify-center  border-0 shadow-none bg-white"
+                className="font-medium py-4 px-2 rounded-lg w-full flex flex-col items-center justify-center border-0 shadow-none bg-white relative h-32"
                 variant="outline"
               >
-                {subject.name}
+                <span className="absolute top-2 left-4 text-lg font-bold">
+                  {subject.name}
+                </span>
+                <div className="relative w-full h-full mt-4">
+                  <Image
+                    src={subject.imagePath}
+                    alt={subject.name}
+                    fill
+                    className="object-contain"
+                    priority
+                  />
+                </div>
               </Button>
             </Link>
           ))}
