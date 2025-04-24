@@ -549,7 +549,7 @@ export function useGame({
           showFeedbackWithTimer("Feedback processing error.", "error");
         } else {
           if (result.previousResponseCorrect) {
-            setScore((prev) => prev + 10);
+            setScore((prev) => prev + 1);
             triggerConfetti(); // Trigger confetti for correct answer
           }
           showFeedbackWithTimer(result.explanation, result.previousResponseCorrect ? "correct" : "incorrect");
@@ -653,6 +653,6 @@ function triggerConfetti() {
   confetti({
     particleCount: 100,
     spread: 70,
-    origin: { y: 0.6 },
+    origin: { y: 0 },
   });
 }

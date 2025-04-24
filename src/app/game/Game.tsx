@@ -54,6 +54,7 @@ export default function Game() {
           isAiQuiz={true} // This is an AI quiz
           aiScore={score} // The score from the game
           aiTotalAnswered={totalNpcs} // Total NPCs equals total questions
+          aiSubject={subject} // Pass the subject to the component
           quiz={null} // No predefined quiz for AI mode
           answers={[]} // No detailed answers in AI mode
           onTryAgain={handleTryAgain}
