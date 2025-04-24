@@ -42,7 +42,7 @@ export function useGame({
   movementSpeed = 3,
   worldWidth = 5000,
   subject = "General Knowledge", // Default subject
-  feedbackDuration = 8000
+  feedbackDuration = 8000,
 }: UseGameOptions = {}) {
   // Game state
   const [position, setPosition] = useState(0);

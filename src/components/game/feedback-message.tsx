@@ -18,7 +18,7 @@ export const FeedbackMessage: React.FC<FeedbackMessageProps> = ({
         className={`py-4 px-8 rounded-lg font-bold ${
           type === "correct"
             ? "bg-green-500 text-white"
-            : "bg-red-500 text-white"
+            : "bg-orange-500 text-white"
         }`}
       >
         {message}
