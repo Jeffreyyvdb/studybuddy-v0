@@ -9,6 +9,7 @@ import { MobileControls } from "@/components/game/mobile-controls";
 import { QuestionPopup } from "@/components/game/question-popup";
 import { FeedbackMessage } from "@/components/game/feedback-message";
 import { useEffect } from "react";
+import FactoidScreen from "@/components/game/FactoidScreen";
 
 const Game = () => {
   // Using our custom hook for game logic
@@ -54,14 +55,22 @@ const Game = () => {
         onButtonRelease={game.handleMobileButtonRelease}
       />
 
-      {/* Question popup */}
-      {game.currentQuestion && game.activeNpc && (
-        <QuestionPopup
-          question={game.currentQuestion}
-          npc={game.activeNpc}
-          onAnswer={game.submitAnswerToAI} // Use the new AI handler
-          isAnswering={game.isAnswering} // Pass loading state
+      {/* Show Question OR Factoid, not both */}
+      {game.showFactoid ? (
+        <FactoidScreen
+          lastQuestion={game.lastQuestion || ''}
+          factoid={game.factoid || ''}
+          onContinue={game.handleFactoidContinue}
         />
+      ) : (
+        game.currentQuestion && game.activeNpc && (
+          <QuestionPopup
+            question={game.currentQuestion}
+            npc={game.activeNpc}
+            onAnswer={game.submitAnswerToAI}
+            isAnswering={game.isAnswering}
+          />
+        )
       )}
 
       {/* Feedback message */}
