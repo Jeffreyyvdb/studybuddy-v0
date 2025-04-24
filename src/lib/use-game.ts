@@ -38,7 +38,7 @@ interface AIGameFeedbackResponse {
 export function useGame({
   npcTypes = defaultNpcTypes,
   npcSpawnInterval = 450,
-  npcInteractionDistance = 50,
+  npcInteractionDistance = 100,
   movementSpeed = 3,
   worldWidth = 5000,
   subject = "General Knowledge", // Default subject
@@ -53,7 +53,7 @@ export function useGame({
   const [distance, setDistance] = useState(0);
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
-  const [feedbackType, setFeedbackType] = useState<FeedbackType>(null);
+  const [feedbackType, set FeedbackType] = useState<FeedbackType>(null);
   const [npcs, setNpcs] = useState<NpcObject[]>([]);
   const [activeNpc, setActiveNpc] = useState<NpcObject | null>(null);
   const [isFetchingQuestion, setIsFetchingQuestion] = useState(false);
