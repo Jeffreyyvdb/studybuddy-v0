@@ -1,86 +1,93 @@
 "use client";
 
+import React from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useGame } from "@/lib/use-game";
 import { GameBackground } from "@/components/game/game-background";
 import { Player } from "@/components/game/player";
 import { NPCs } from "@/components/game/npcs";
-import { MobileControls } from "@/components/game/mobile-controls";
+import { GameUI } from "@/components/game/game-ui";
 import { QuestionPopup } from "@/components/game/question-popup";
 import { FeedbackMessage } from "@/components/game/feedback-message";
-import { useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { MobileControls } from "@/components/game/mobile-controls";
+import { QuizResults } from "@/components/quiz/quiz-results";
 
-const Game = () => {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <GameContent />
-    </Suspense>
-  );
-};
-
-const GameContent = () => {
-  // Get the subject from URL query parameters
+export default function Game() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const subject = searchParams.get("subject") || "General Knowledge";
 
-  // Using our custom hook for game logic with the subject from URL
-  const game = useGame({ subject });
+  const {
+    position,
+    isMoving,
+    direction,
+    score,
+    distance,
+    currentQuestion,
+    feedbackMessage,
+    feedbackType,
+    activeNpc,
+    visibleNpcs,
+    npcInteractionDistance,
+    isSubmittingAnswer,
+    handleMobileButtonPress,
+    handleMobileButtonRelease,
+    submitAnswerToAI,
+    isGameFinished,
+    totalNpcs,
+  } = useGame({ subject });
 
-  // Add touch event listeners for mobile devices
-  useEffect(() => {
-    const preventDefaultTouchMove = (e: TouchEvent) => {
-      e.preventDefault();
-    };
+  // These functions are needed for QuizResults
+  const handleTryAgain = () => {
+    router.push("/game"); // Restart the game
+  };
 
-    // Prevent pinch zoom
-    document.addEventListener("touchmove", preventDefaultTouchMove, {
-      passive: false,
-    });
+  const handleBackToQuizzes = () => {
+    router.push("/choose-subject"); // Go back to subject selection
+  };
 
-    // Clean up event listeners on component unmount
-    return () => {
-      document.removeEventListener("touchmove", preventDefaultTouchMove);
-    };
-  }, []);
+  // Show QuizResults when the game is finished
+  if (isGameFinished) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <QuizResults
+          isAiQuiz={true} // This is an AI quiz
+          aiScore={score} // The score from the game
+          aiTotalAnswered={totalNpcs} // Total NPCs equals total questions
+          quiz={null} // No predefined quiz for AI mode
+          answers={[]} // No detailed answers in AI mode
+          onTryAgain={handleTryAgain}
+          onBackToQuizzes={handleBackToQuizzes}
+        />
+      </div>
+    );
+  }
 
+  // Render the game if not finished
   return (
-    <div className="fixed inset-0 overflow-hidden touch-none select-none bg-gray-800">
-      {/* Game background with parallax scrolling */}
-      <GameBackground position={game.position} />
+    <div className="relative w-full h-screen overflow-hidden bg-blue-200">
+      <GameBackground position={position} />
+      <Player direction={direction} isMoving={isMoving} />
+      <NPCs npcs={visibleNpcs} interactionDistance={npcInteractionDistance} />
 
-      {/* Player character with animation based on movement */}
-      <Player direction={game.direction} isMoving={game.isMoving} />
-
-      {/* NPCs in the world */}
-      <NPCs
-        npcs={game.visibleNpcs}
-        interactionDistance={game.npcInteractionDistance}
-      />
-
-      {/* Mobile controls */}
-      <MobileControls
-        onButtonPress={game.handleMobileButtonPress}
-        onButtonRelease={game.handleMobileButtonRelease}
-      />
-
-      <div className="fixed top-16 flex flex-col items-center w-full z-40">
-        {/* Question popup */}
-        {game.currentQuestion && game.activeNpc && (
+      <div className="absolute top-16 flex flex-col items-center z-50 w-full justify-center">
+        {activeNpc && currentQuestion && (
           <QuestionPopup
-            question={game.currentQuestion}
-            onAnswer={game.submitAnswerToAI} // Use the new AI handler
-            isAnswering={game.isAnswering} // Pass loading state
+            question={currentQuestion}
+            onAnswer={submitAnswerToAI}
+            isAnswering={isSubmittingAnswer && !feedbackMessage}
           />
         )}
 
-        {/* Feedback message */}
-        <FeedbackMessage
-          message={game.feedbackMessage}
-          type={game.feedbackType}
-        />
+        {feedbackMessage && (
+          <FeedbackMessage message={feedbackMessage} type={feedbackType} />
+        )}
       </div>
+
+      <MobileControls
+        onButtonPress={handleMobileButtonPress}
+        onButtonRelease={handleMobileButtonRelease}
+      />
     </div>
   );
-};
-
-export default Game;
+}

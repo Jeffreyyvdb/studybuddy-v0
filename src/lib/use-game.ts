@@ -5,13 +5,13 @@ import confetti from "canvas-confetti";
 
 // Different NPC types
 const defaultNpcTypes = ["🧙", "👩‍🏫", "👨‍🔬", "🧑‍⚕️", "👮"];
+const TOTAL_NPCS = 5; // Define the total number of NPCs
 
 interface UseGameOptions {
   npcTypes?: string[];
   npcSpawnInterval?: number;
   npcInteractionDistance?: number;
   movementSpeed?: number;
-  worldWidth?: number;
   feedbackDuration?: number;
   subject?: string; // Add subject option
 }
@@ -37,10 +37,9 @@ interface AIGameFeedbackResponse {
 
 export function useGame({
   npcTypes = defaultNpcTypes,
-  npcSpawnInterval = 450,
+  npcSpawnInterval = 450, // Adjust spacing based on fixed number
   npcInteractionDistance = 50,
   movementSpeed = 3,
-  worldWidth = 5000,
   subject = "General Knowledge", // Default subject
   feedbackDuration = 8000
 }: UseGameOptions = {}) {
@@ -59,30 +58,35 @@ export function useGame({
   const [isFetchingQuestion, setIsFetchingQuestion] = useState(false);
   const [isSubmittingAnswer, setIsSubmittingAnswer] = useState(false);
   const [messageHistory, setMessageHistory] = useState<Message[]>([]);
+  const [isGameFinished, setIsGameFinished] = useState(false); // New state for game completion
+  const [answeredCount, setAnsweredCount] = useState(0); // Track answered NPCs
 
   const currentQuestion =
     questions.length > 0 ? questions[questions.length - 1] : null;
 
-  // Initialize NPCs (without pre-assigned questions)
+  // Initialize exactly 5 NPCs
   useEffect(() => {
     const initialNpcs: NpcObject[] = [];
-    for (let i = npcSpawnInterval; i < worldWidth; i += npcSpawnInterval) {
+    for (let i = 0; i < TOTAL_NPCS; i++) {
+      const npcPosition = (i + 1) * npcSpawnInterval; // Space them out
       const randomNpcType =
         npcTypes[Math.floor(Math.random() * npcTypes.length)];
       initialNpcs.push({
-        id: i,
-        position: i,
+        id: npcPosition, // Use position as ID for simplicity
+        position: npcPosition,
         character: randomNpcType,
         answered: false,
       });
     }
     setNpcs(initialNpcs);
-  }, [npcSpawnInterval, worldWidth, npcTypes]);
+    setAnsweredCount(0); // Reset count on re-init
+    setIsGameFinished(false); // Reset finished state
+  }, [npcSpawnInterval, npcTypes]); // Removed worldWidth dependency here
 
   // Function to fetch the NEXT question for a NEW NPC, using existing history
   const fetchInitialQuestion = useCallback(
     async (npc: NpcObject) => {
-      if (isFetchingQuestion || isSubmittingAnswer) return;
+      if (isFetchingQuestion || isSubmittingAnswer || isGameFinished) return; // Prevent fetching if game is over
 
       setActiveNpc(npc);
       setQuestions([]); // Still reset questions for the new NPC interaction
@@ -102,14 +106,28 @@ export function useGame({
         // Use the subject parameter to specify the quiz topic
         nextQuestionPrompt.content = `Start a quiz about ${subject}. Give me a question.`;
       } else {
-        // We already have a question, use the last question in the history
-        const lastQuestion = messageHistory[messageHistory.length - 1];
-        if (lastQuestion.role === "assistant") {
-          setQuestions([{...JSON.parse(lastQuestion.content) as AIGameQuestionResponse, correctAnswer: ''}]); // Set the last question as the current question
-          return; // Don't fetch a new question
+        // Check if the last message was an assistant's response (a question or feedback)
+        const lastMessage = messageHistory[messageHistory.length - 1];
+        if (lastMessage.role === "assistant") {
+          try {
+            const lastContent = JSON.parse(lastMessage.content);
+            // If the last message was a question, reuse it
+            if (lastContent.question && (lastContent.options || Array.isArray(lastContent.options))) {
+              console.log("Reusing last question:", lastContent);
+              setQuestions([
+                { ...lastContent as AIGameQuestionResponse, correctAnswer: "" },
+              ]);
+              return; // Don't fetch a new question
+            }
+            // If it was feedback, we still need a new question prompt
+          } catch (e) {
+            console.error("Failed to parse last assistant message:", e);
+            // Proceed to ask for a new question if parsing fails
+          }
         }
+        // If last message was user or unparsable assistant msg, ask for next question
       }
-      
+
       // Set loading state for fetching question
       setIsFetchingQuestion(true);
 
@@ -118,7 +136,10 @@ export function useGame({
       // Update history state immediately
       setMessageHistory(historyToSend);
 
+      const currentNpcId = npc.id; // Store current NPC ID for error handling
+
       try {
+        console.log("Fetching question for NPC:", npc);
         const response = await fetch("/api/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -131,40 +152,72 @@ export function useGame({
           throw new Error(`API error: ${response.statusText}`);
         }
 
-        const nextQuestionData =
-          (await response.json()) as AIGameQuestionResponse; // Expecting a question
+        const responseText = await response.text();
+        console.log("Raw API response:", responseText);
+        
+        let nextQuestionData;
+        try {
+          nextQuestionData = JSON.parse(responseText) as AIGameQuestionResponse; 
+          console.log("Parsed question data:", nextQuestionData);
+        } catch (parseError) {
+          console.error("Failed to parse API response as JSON:", parseError);
+          throw new Error("Invalid response format");
+        }
 
         // Validate the response contains a question
         if (
           !nextQuestionData ||
           !nextQuestionData.question ||
-          !nextQuestionData.options
+          (!nextQuestionData.options && !Array.isArray(nextQuestionData.options))
         ) {
           // Handle case where AI doesn't provide a next question (e.g., end of topic)
           console.warn(
-            "AI did not provide a next question or format is invalid."
+            "AI did not provide a valid question structure:",
+            nextQuestionData
           );
           setFeedbackMessage("Looks like that's all the questions for now!");
           setFeedbackType("incorrect"); // Use a neutral feedback type
           setActiveNpc(null); // End interaction immediately
           // Mark NPC as answered even if no question was asked, to avoid re-triggering
-          setNpcs((prev) =>
-            prev.map((n) => (n.id === npc.id ? { ...n, answered: true } : n))
-          );
+          setNpcs((prevNpcs) => {
+            const alreadyAnswered = prevNpcs.find(
+              (n) => n.id === currentNpcId
+            )?.answered;
+            if (!alreadyAnswered) {
+              setAnsweredCount((prevCount) => prevCount + 1); // Increment count only if newly answered
+            }
+            return prevNpcs.map((n) =>
+              n.id === currentNpcId ? { ...n, answered: true } : n
+            );
+          });
           setTimeout(() => {
             // Clear feedback after delay
             setFeedbackMessage(null);
             setFeedbackType(null);
+            // Check if game finished after this interaction
+            setAnsweredCount((currentCount) => {
+              if (currentCount >= TOTAL_NPCS) {
+                setIsGameFinished(true);
+              }
+              return currentCount;
+            });
           }, feedbackDuration);
         } else {
+          // Ensure options is always an array, even if empty
+          if (!nextQuestionData.options) {
+            nextQuestionData.options = [];
+          }
+          
           // Process the received question
           const nextQuestion: QuizQuestion = {
             ...nextQuestionData,
-            correctAnswer: "", // Assuming multiple choice answers aren't needed upfront
+            correctAnswer: nextQuestionData.correctAnswer || "", 
             // Reset feedback fields for the new question
             explanation: "",
             previousResponseCorrect: undefined,
           };
+          
+          console.log("Setting current question:", nextQuestion);
           setQuestions([nextQuestion]); // Set this as the current question for the NPC
 
           // Add the AI's response (the new question) to the history
@@ -184,9 +237,28 @@ export function useGame({
         setActiveNpc(null);
         setQuestions([]);
         // Optionally clear history on error? For now, keep it.
+        // Mark NPC as answered even on error to prevent getting stuck
+        setNpcs((prevNpcs) => {
+          const alreadyAnswered = prevNpcs.find(
+            (n) => n.id === currentNpcId
+          )?.answered;
+          if (!alreadyAnswered) {
+            setAnsweredCount((prevCount) => prevCount + 1); // Increment count only if newly answered
+          }
+          return prevNpcs.map((n) =>
+            n.id === currentNpcId ? { ...n, answered: true } : n
+          );
+        });
         setTimeout(() => {
           setFeedbackMessage(null);
           setFeedbackType(null);
+          // Check if game finished after this error interaction
+          setAnsweredCount((currentCount) => {
+            if (currentCount >= TOTAL_NPCS) {
+              setIsGameFinished(true);
+            }
+            return currentCount;
+          });
         }, feedbackDuration);
       } finally {
         setIsFetchingQuestion(false);
@@ -197,7 +269,9 @@ export function useGame({
       isSubmittingAnswer,
       feedbackDuration,
       messageHistory,
-      subject, // Add subject as dependency
+      subject,
+      isGameFinished, // Add dependency
+      // answeredCount managed internally
     ]
   );
 
@@ -207,7 +281,8 @@ export function useGame({
       questions.length > 0 ||
       activeNpc ||
       isFetchingQuestion ||
-      isSubmittingAnswer
+      isSubmittingAnswer ||
+      isGameFinished // Don't check if game is finished
     )
       return;
 
@@ -231,6 +306,7 @@ export function useGame({
     isFetchingQuestion,
     isSubmittingAnswer,
     fetchInitialQuestion,
+    isGameFinished, // Add dependency
   ]);
 
   // Handle movement logic
@@ -240,7 +316,8 @@ export function useGame({
       questions.length > 0 ||
       activeNpc ||
       isFetchingQuestion ||
-      isSubmittingAnswer
+      isSubmittingAnswer ||
+      isGameFinished // Stop movement if game is finished
     )
       return;
 
@@ -267,6 +344,7 @@ export function useGame({
     isSubmittingAnswer,
     movementSpeed,
     checkNpcInteractions,
+    isGameFinished, // Add dependency
   ]);
 
   // Handle keyboard controls
@@ -276,7 +354,8 @@ export function useGame({
         questions.length > 0 ||
         activeNpc ||
         isFetchingQuestion ||
-        isSubmittingAnswer
+        isSubmittingAnswer ||
+        isGameFinished // Ignore input if game is finished
       )
         return;
       switch (e.key) {
@@ -291,6 +370,12 @@ export function useGame({
       }
     };
     const handleKeyUp = (e: KeyboardEvent) => {
+      if (isGameFinished) {
+        // Ensure movement stops if game finishes while key is held
+        setIsMoving(false);
+        setDirection(0);
+        return;
+      }
       if (e.key === "ArrowLeft" && direction === -1) {
         setIsMoving(false);
         setDirection(0);
@@ -311,6 +396,7 @@ export function useGame({
     activeNpc,
     isFetchingQuestion,
     isSubmittingAnswer,
+    isGameFinished, // Add dependency
   ]);
 
   // Handle mobile controls
@@ -320,21 +406,29 @@ export function useGame({
         questions.length > 0 ||
         activeNpc ||
         isFetchingQuestion ||
-        isSubmittingAnswer
+        isSubmittingAnswer ||
+        isGameFinished // Ignore input if game is finished
       )
         return;
       setDirection(dir);
       setIsMoving(true);
     },
-    [questions.length, activeNpc, isFetchingQuestion, isSubmittingAnswer]
+    [
+      questions.length,
+      activeNpc,
+      isFetchingQuestion,
+      isSubmittingAnswer,
+      isGameFinished, // Add dependency
+    ]
   );
 
   const handleMobileButtonRelease = useCallback(() => {
+    // No need to check isGameFinished here, releasing always stops movement intent
     setIsMoving(false);
     setDirection(0);
   }, []);
 
-  // Modified function to submit answer, get feedback, and end interaction
+  // Modified function to submit answer, get feedback, and check for game end
   const submitAnswerToAI = useCallback(
     async (selectedAnswer: string) => {
       console.log("Submitting answer:", selectedAnswer);
@@ -342,11 +436,19 @@ export function useGame({
         !currentQuestion ||
         !activeNpc ||
         isSubmittingAnswer ||
-        isFetchingQuestion
+        isFetchingQuestion ||
+        isGameFinished // Prevent submission if game is over
       ) {
         console.warn(
-          "Cannot submit answer: No current question or active NPC.",
-          currentQuestion);
+          "Cannot submit answer: No current question, active NPC, processing, or game finished.",
+          {
+            currentQuestion,
+            activeNpc,
+            isSubmittingAnswer,
+            isFetchingQuestion,
+            isGameFinished,
+          }
+        );
         return;
       }
       setIsSubmittingAnswer(true);
@@ -360,13 +462,12 @@ export function useGame({
       };
 
       // 2. Create the history to be sent (append to existing history)
-      const historyToSend = [
-        ...messageHistory,
-        userAnswerMessage as Message,
-      ];
+      const historyToSend = [...messageHistory, userAnswerMessage as Message];
 
       // 3. Update the state *before* the API call
       setMessageHistory(historyToSend);
+
+      const currentNpcId = activeNpc.id; // Store current NPC ID
 
       try {
         const response = await fetch("/api/chat", {
@@ -398,10 +499,7 @@ export function useGame({
           result.explanation === undefined ||
           result.previousResponseCorrect === undefined
         ) {
-          console.warn(
-            "API response missing required feedback fields.",
-            result
-          );
+          console.warn("API response missing required feedback fields.", result);
           setFeedbackMessage("Feedback processing error.");
           setFeedbackType("error");
         } else {
@@ -414,13 +512,25 @@ export function useGame({
             result.previousResponseCorrect ? "correct" : "incorrect"
           );
         }
-
-        // --- End Interaction with this NPC (Always happens after feedback for single question) ---
-        setNpcs((prev) =>
-          prev.map((npc) =>
-            npc.id === activeNpc.id ? { ...npc, answered: true } : npc
-          )
-        );
+      } catch (error) {
+        console.error("Error submitting answer to AI:", error);
+        setFeedbackMessage("Error evaluating answer. Please try again.");
+        setFeedbackType("error");
+      } finally {
+        // --- End Interaction with this NPC (Always happens after feedback/error) ---
+        // Ensure NPC is marked answered only once per interaction attempt
+        setNpcs((prevNpcs) => {
+          const alreadyAnswered = prevNpcs.find(
+            (n) => n.id === currentNpcId
+          )?.answered;
+          if (!alreadyAnswered) {
+            // Use functional update for answeredCount to ensure atomicity
+            setAnsweredCount((prevCount) => prevCount + 1);
+          }
+          return prevNpcs.map((npc) =>
+            npc.id === currentNpcId ? { ...npc, answered: true } : npc
+          );
+        });
 
         // Clear interaction state after feedback duration
         setTimeout(() => {
@@ -430,25 +540,17 @@ export function useGame({
           setActiveNpc(null);
           setIsSubmittingAnswer(false);
           // messageHistory persists
-        }, feedbackDuration);
-      } catch (error) {
-        console.error("Error submitting answer to AI:", error);
-        setFeedbackMessage("Error evaluating answer. Please try again.");
-        setFeedbackType("error");
-        if (activeNpc) {
-          setNpcs((prev) =>
-            prev.map((npc) =>
-              npc.id === activeNpc.id ? { ...npc, answered: true } : npc
-            )
-          );
-        }
-        setTimeout(() => {
-          setFeedbackMessage(null);
-          setFeedbackType(null);
-          setQuestions([]);
-          setActiveNpc(null);
-          setIsSubmittingAnswer(false);
-          // messageHistory persists
+
+          // Check if the game is finished *after* clearing state and incrementing count
+          // Use a callback with setAnsweredCount to ensure we check with the updated value
+          setAnsweredCount((currentCount) => {
+            console.log(`Checking game end: Answered ${currentCount}/${TOTAL_NPCS}`);
+            if (currentCount >= TOTAL_NPCS) {
+              console.log("Game finished!");
+              setIsGameFinished(true);
+            }
+            return currentCount; // Return the current count for the state update
+          });
         }, feedbackDuration);
       }
     },
@@ -458,7 +560,8 @@ export function useGame({
       isSubmittingAnswer,
       isFetchingQuestion,
       feedbackDuration,
-      messageHistory, // Keep history as dependency
+      messageHistory,
+      isGameFinished, // Add dependency
     ]
   );
 
@@ -486,7 +589,7 @@ export function useGame({
     score,
     distance,
     currentQuestion,
-    questions,
+    questions, // Keep questions state for potential display during interaction
     feedbackMessage,
     feedbackType,
     activeNpc,
@@ -497,6 +600,9 @@ export function useGame({
     handleMobileButtonPress,
     handleMobileButtonRelease,
     submitAnswerToAI,
+    isGameFinished, // Expose the game finished state
+    totalNpcs: TOTAL_NPCS, // Expose total NPCs
+    answeredCount, // Expose answered count
   };
 }
 
