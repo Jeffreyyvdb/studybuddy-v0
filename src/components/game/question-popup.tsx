@@ -69,6 +69,11 @@ export const QuestionPopup: React.FC<QuestionPopupProps> = ({
             placeholder="Type your answer here..."
             value={openAnswer}
             onChange={(e) => setOpenAnswer(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !isAnswering && openAnswer.trim()) {
+                handleOpenAnswerSubmit();
+              }
+            }}
             disabled={isAnswering}
             className="w-full"
           />
