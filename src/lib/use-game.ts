@@ -2,10 +2,11 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { NpcObject, QuizQuestion, FeedbackType } from "../types/game";
 import { Message } from "ai";
 import confetti from "canvas-confetti";
+import { aggregateDetailedResponseDataFromMessages } from "./tips";
 
 // Different NPC types
 const defaultNpcTypes = ["🧙", "👩‍🏫", "👨‍🔬", "🧑‍⚕️", "👮"];
-const TOTAL_NPCS = 5; // Define the total number of NPCs
+const TOTAL_NPCS = 10; // Define the total number of NPCs
 
 interface UseGameOptions {
   npcTypes?: string[];
@@ -23,7 +24,10 @@ interface AIGameQuestionResponse {
   id: number | string;
   previousResponseCorrect?: boolean; // Make optional as it might not be in the first response
   explanation?: string; // Make optional
-  tag: string; // Tag for AI questions
+  topic: string; // Tag for AI questions
+  subCategory?: string; // Optional subcategory for AI questions
+  factoid?: string; // Optional factoid for AI questions
+  difficulty?: string; // Optional difficulty for AI questions
 }
 
 // Define expected AI response structure for game feedback
@@ -576,7 +580,9 @@ export function useGame({
 
           // Check if the game is finished *after* clearing state and incrementing count
           console.log(`Checking game end: Answered ${answeredCount}/${TOTAL_NPCS}`);
-          if (answeredCount - 1  >= TOTAL_NPCS) {
+          if (answeredCount  >= TOTAL_NPCS) {
+            const results = aggregateDetailedResponseDataFromMessages(messageHistory);
+            console.log("Game results:", results);
             console.log("Game finished!");
             setIsGameFinished(true);
           }

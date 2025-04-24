@@ -7,7 +7,10 @@ export interface QuizQuestion {
   correctAnswer: string; // Still needed for predefined, maybe used by AI for context
   explanation?: string; // Add explanation from AI feedback
   previousResponseCorrect?: boolean; // Add feedback status
-  tag: string; // Tag for AI questions
+  topic: string; // Tag for AI questions
+  subcategory?: string; // Optional subcategory for AI questions
+  factoid?: string; // Optional factoid for AI questions
+  difficulty?: string; // Optional difficulty for AI questions
 }
 
 export interface NpcObject {

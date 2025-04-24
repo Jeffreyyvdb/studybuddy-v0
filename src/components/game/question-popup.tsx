@@ -43,7 +43,10 @@ export const QuestionPopup: React.FC<QuestionPopupProps> = ({
 
   return (
     <div className="p-6 max-w-md w-full relative">
-      <span className="text-accent">{question.tag}</span>
+      <div className="flex justify-between mb-4">
+        <span className="text-accent">{question.subcategory}</span>
+        <span className="text-accent bg-white rounded-full w-7 h-7 font-bold text-center border-2 border-accent">{question.difficulty}</span>
+      </div> 
 
       {/* Keep the question text without the outline */}
       <h2 className="text-md font-bold mb-4 text-gray-800">
@@ -80,7 +83,12 @@ export const QuestionPopup: React.FC<QuestionPopupProps> = ({
             value={openAnswer}
             onChange={(e) => setOpenAnswer(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && !isAnswering && !hasAnswered && openAnswer.trim()) {
+              if (
+                e.key === "Enter" &&
+                !isAnswering &&
+                !hasAnswered &&
+                openAnswer.trim()
+              ) {
                 handleOpenAnswerSubmit();
               }
             }}
@@ -93,7 +101,11 @@ export const QuestionPopup: React.FC<QuestionPopupProps> = ({
             className="w-full"
             size={"lg"}
           >
-            {isAnswering ? "Submitting..." : hasAnswered ? "Answered" : "Submit Answer"}
+            {isAnswering
+              ? "Submitting..."
+              : hasAnswered
+              ? "Answered"
+              : "Submit Answer"}
           </Button>
         </div>
       )}
