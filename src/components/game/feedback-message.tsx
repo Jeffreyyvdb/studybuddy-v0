@@ -13,7 +13,7 @@ export const FeedbackMessage: React.FC<FeedbackMessageProps> = ({
   if (!message) return null;
 
   return (
-    <div className="fixed inset-0 p-6 flex items-center justify-center z-50 pointer-events-none">
+    <div className="px-6 max-w-md flex items-center justify-center pointer-events-none">
       <div
         className={`py-4 px-8 rounded-lg text-xl font-bold ${
           type === "correct"
