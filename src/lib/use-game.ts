@@ -197,12 +197,9 @@ export function useGame({
             setFeedbackMessage(null);
             setFeedbackType(null);
             // Check if game finished after this interaction
-            setAnsweredCount((currentCount) => {
-              if (currentCount >= TOTAL_NPCS) {
-                setIsGameFinished(true);
-              }
-              return currentCount;
-            });
+            if (answeredCount >= TOTAL_NPCS) {
+              setIsGameFinished(true);
+            }
           }, feedbackDuration);
         } else {
           // Ensure options is always an array, even if empty
@@ -255,12 +252,9 @@ export function useGame({
           setFeedbackMessage(null);
           setFeedbackType(null);
           // Check if game finished after this error interaction
-          setAnsweredCount((currentCount) => {
-            if (currentCount >= TOTAL_NPCS) {
-              setIsGameFinished(true);
-            }
-            return currentCount;
-          });
+          if (answeredCount >= TOTAL_NPCS) {
+            setIsGameFinished(true);
+          }
         }, feedbackDuration);
       } finally {
         setIsFetchingQuestion(false);
@@ -575,21 +569,17 @@ export function useGame({
 
         // Clear interaction state after feedback duration
         setTimeout(() => {
-        setQuestions([]); // Clear questions
-        setActiveNpc(null);
-        setIsSubmittingAnswer(false);
-        // messageHistory persists
+          setQuestions([]); // Clear questions
+          setActiveNpc(null);
+          setIsSubmittingAnswer(false);
+          // messageHistory persists
 
-        // Check if the game is finished *after* clearing state and incrementing count
-// Use a callback with setAnsweredCount to ensure we check with the updated value
-        setAnsweredCount((currentCount) => {
-          console.log(`Checking game end: Answered ${currentCount}/${TOTAL_NPCS}`);
-          if (currentCount >= TOTAL_NPCS) {
+          // Check if the game is finished *after* clearing state and incrementing count
+          console.log(`Checking game end: Answered ${answeredCount}/${TOTAL_NPCS}`);
+          if (answeredCount - 1  >= TOTAL_NPCS) {
             console.log("Game finished!");
             setIsGameFinished(true);
           }
-          return currentCount; // Return the current count for the state update
-        });
         }, feedbackDuration);
       }
     },
@@ -653,6 +643,6 @@ function triggerConfetti() {
   confetti({
     particleCount: 100,
     spread: 70,
-    origin: { y: 0 },
+    origin: { y: 1 },
   });
 }
