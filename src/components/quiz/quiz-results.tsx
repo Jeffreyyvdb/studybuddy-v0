@@ -73,7 +73,12 @@ export function QuizResults({
           />
         </div>
         <span className="mt-4">Tips</span>
-        <span className="bg-white text-sm rounded-lg w-full p-4">Math</span>
+        <span className="bg-white text-sm rounded-lg w-full p-4">
+          <ul className="list-disc pl-4">
+            <li>It seems the topics of Ancient Empires and Ancient Wars are challenging for you, especially with multiple incorrect answers at difficulty level 4 and 5 respectively.</li>
+            <li>You seem to have a good grasp of Ancient Wars, but Ancient Empires might need more focus.</li>
+          </ul>
+        </span>
       </div>
 
       <div className="flex gap-4 mt-8">
