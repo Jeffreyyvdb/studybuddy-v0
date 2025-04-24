@@ -84,7 +84,6 @@ export function useGame({
     async (npc: NpcObject) => {
       if (isFetchingQuestion || isSubmittingAnswer) return;
 
-      setIsFetchingQuestion(true);
       setActiveNpc(npc);
       setQuestions([]); // Still reset questions for the new NPC interaction
       setFeedbackMessage(null);
@@ -102,7 +101,17 @@ export function useGame({
       if (!messageHistory || messageHistory.length === 0) {
         // Use the subject parameter to specify the quiz topic
         nextQuestionPrompt.content = `Start a quiz about ${subject}. Give me a question.`;
+      } else {
+        // We already have a question, use the last question in the history
+        const lastQuestion = messageHistory[messageHistory.length - 1];
+        if (lastQuestion.role === "assistant") {
+          setQuestions([{...JSON.parse(lastQuestion.content) as AIGameQuestionResponse, correctAnswer: ''}]); // Set the last question as the current question
+          return; // Don't fetch a new question
+        }
       }
+      
+      // Set loading state for fetching question
+      setIsFetchingQuestion(true);
 
       // Send the existing history PLUS the new prompt
       const historyToSend = [...messageHistory, nextQuestionPrompt as Message];
@@ -328,14 +337,18 @@ export function useGame({
   // Modified function to submit answer, get feedback, and end interaction
   const submitAnswerToAI = useCallback(
     async (selectedAnswer: string) => {
+      console.log("Submitting answer:", selectedAnswer);
       if (
         !currentQuestion ||
         !activeNpc ||
         isSubmittingAnswer ||
         isFetchingQuestion
-      )
+      ) {
+        console.warn(
+          "Cannot submit answer: No current question or active NPC.",
+          currentQuestion);
         return;
-
+      }
       setIsSubmittingAnswer(true);
       setFeedbackMessage(null);
       setFeedbackType(null);
@@ -343,19 +356,13 @@ export function useGame({
       // 1. Create user messages for this turn
       const userAnswerMessage: Omit<Message, "id"> = {
         role: "user",
-        content: `My answer to question ID ${currentQuestion.id} is: ${selectedAnswer}`,
-      };
-      // Modify prompt: Only ask for feedback
-      const userPromptMessage: Omit<Message, "id"> = {
-        role: "user",
-        content: "Give me feedback on my answer.", // Changed prompt
+        content: `${selectedAnswer}`,
       };
 
       // 2. Create the history to be sent (append to existing history)
       const historyToSend = [
         ...messageHistory,
         userAnswerMessage as Message,
-        userPromptMessage as Message,
       ];
 
       // 3. Update the state *before* the API call
