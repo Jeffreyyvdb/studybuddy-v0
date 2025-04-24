@@ -10,6 +10,8 @@ import { QuestionPopup } from "@/components/game/question-popup";
 import { FeedbackMessage } from "@/components/game/feedback-message";
 import { MobileControls } from "@/components/game/mobile-controls";
 import { QuizResults } from "@/components/quiz/quiz-results";
+import { useEffect } from "react";
+import FactoidScreen from "@/components/game/FactoidScreen";
 
 export default function Game() {
   const searchParams = useSearchParams();
@@ -97,3 +99,35 @@ export default function Game() {
     </div>
   );
 }
+        onButtonPress={game.handleMobileButtonPress}
+        onButtonRelease={game.handleMobileButtonRelease}
+      />
+
+      {/* Show Question OR Factoid, not both */}
+      {game.showFactoid ? (
+        <FactoidScreen
+          lastQuestion={game.lastQuestion || ''}
+          factoid={game.factoid || ''}
+          onContinue={game.handleFactoidContinue}
+        />
+      ) : (
+        game.currentQuestion && game.activeNpc && (
+          <QuestionPopup
+            question={game.currentQuestion}
+            npc={game.activeNpc}
+            onAnswer={game.submitAnswerToAI}
+            isAnswering={game.isAnswering}
+          />
+        )
+      )}
+
+      {/* Feedback message */}
+      <FeedbackMessage
+        message={game.feedbackMessage}
+        type={game.feedbackType}
+      />
+    </div>
+  );
+};
+
+export default Game;

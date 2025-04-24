@@ -14,6 +14,7 @@ interface UseGameOptions {
   movementSpeed?: number;
   feedbackDuration?: number;
   subject?: string; // Add subject option
+  showFloatingQuestionMarks?: boolean; // Add this line
 }
 
 // Define expected AI response structure for game questions
@@ -42,6 +43,12 @@ export function useGame({
   movementSpeed = 3,
   subject = "General Knowledge", // Default subject
   feedbackDuration = 8000
+  npcSpawnInterval = 400, // Increased from 100
+  npcInteractionDistance = 30, // Decreased from 50 for more precise interactions
+  movementSpeed = 3,
+  worldWidth = 5000,
+  feedbackDuration = 2000,
+  showFloatingQuestionMarks = true, // Add this line
 }: UseGameOptions = {}) {
   // Game state
   const [position, setPosition] = useState(0);
@@ -62,12 +69,21 @@ export function useGame({
   const [answeredCount, setAnsweredCount] = useState(0); // Track answered NPCs
   const [feedbackTimeRemaining, setFeedbackTimeRemaining] = useState(0); // New state for feedback timer
   const feedbackTimerRef = useRef<NodeJS.Timeout | null>(null); // Reference to track the timer
+  const [showFactoid, setShowFactoid] = useState(false);
+  const [factoid, setFactoid] = useState('');
+  const [lastQuestion, setLastQuestion] = useState('');
+  const questionDistance = 100; // Distance between questions
 
   const currentQuestion =
     questions.length > 0 ? questions[questions.length - 1] : null;
 
   // Initialize exactly 5 NPCs
+  const INTERACTION_COOLDOWN = 1000; // 1 second cooldown
+  const [canInteract, setCanInteract] = useState(true);
+
+  // Initialize NPCs (without pre-assigned questions)
   useEffect(() => {
+    const spacing = 100; // Fixed spacing between NPCs
     const initialNpcs: NpcObject[] = [];
     for (let i = 0; i < TOTAL_NPCS; i++) {
       const npcPosition = (i + 1) * npcSpawnInterval; // Space them out
@@ -76,6 +92,15 @@ export function useGame({
       initialNpcs.push({
         id: npcPosition, // Use position as ID for simplicity
         position: npcPosition,
+    
+    // Limit the number of NPCs to a reasonable amount (e.g., 10)
+    const maxNPCs = 10;
+    
+    for (let i = 0; i < maxNPCs; i++) {
+      const randomNpcType = npcTypes[Math.floor(Math.random() * npcTypes.length)];
+      initialNpcs.push({
+        id: i,
+        position: (i + 1) * spacing * 4, // Multiply by 4 to create larger gaps
         character: randomNpcType,
         answered: false,
       });
@@ -84,6 +109,7 @@ export function useGame({
     setAnsweredCount(0); // Reset count on re-init
     setIsGameFinished(false); // Reset finished state
   }, [npcSpawnInterval, npcTypes]); // Removed worldWidth dependency here
+  }, [npcTypes]); // Remove unnecessary dependencies
 
   // Function to fetch the NEXT question for a NEW NPC, using existing history
   const fetchInitialQuestion = useCallback(
@@ -91,10 +117,10 @@ export function useGame({
       if (isFetchingQuestion || isSubmittingAnswer || isGameFinished) return; // Prevent fetching if game is over
 
       setActiveNpc(npc);
-      setQuestions([]); // Still reset questions for the new NPC interaction
+      // Clear existing questions first
+      setQuestions([]); 
       setFeedbackMessage(null);
       setFeedbackType(null);
-      // DO NOT reset messageHistory here
 
       // Create the user message asking for the next question based on history
       const nextQuestionPrompt: Omit<Message, "id"> = {
@@ -102,6 +128,8 @@ export function useGame({
         // Ask for the next question based on the existing conversation
         content:
           "Based on our previous conversation, please provide the next quiz question.",
+=======
+        content: "Based on our previous conversation, please provide the next quiz question.",
       };
 
       if (!messageHistory || messageHistory.length === 0) {
@@ -140,6 +168,8 @@ export function useGame({
 
       const currentNpcId = npc.id; // Store current NPC ID for error handling
 
+      const historyToSend = [...messageHistory, nextQuestionPrompt as Message];
+      
       try {
         console.log("Fetching question for NPC:", npc);
         const response = await fetch("/api/chat", {
@@ -211,6 +241,8 @@ export function useGame({
           const nextQuestion: QuizQuestion = {
             ...nextQuestionData,
             correctAnswer: "", 
+            text: nextQuestionData.question, // Map 'question' to 'text'
+            correctAnswer: "", // Assuming multiple choice answers aren't needed upfront
             // Reset feedback fields for the new question
             explanation: "",
             previousResponseCorrect: undefined,
@@ -218,6 +250,8 @@ export function useGame({
           
           console.log("Setting current question:", nextQuestion);
           setQuestions([nextQuestion]); // Set this as the current question for the NPC
+          // Replace existing questions instead of adding
+          setQuestions([nextQuestion]);
 
           // Add the AI's response (the new question) to the history
           const aiResponse: Omit<Message, "id"> = {
@@ -280,6 +314,7 @@ export function useGame({
       isSubmittingAnswer ||
       isGameFinished // Don't check if game is finished
     )
+    if (!canInteract || questions.length > 0 || activeNpc || isFetchingQuestion || isSubmittingAnswer || showFactoid)
       return;
 
     const playerPosition = distance;
@@ -290,8 +325,14 @@ export function useGame({
     );
 
     if (nearbyNpc) {
+      setCanInteract(false);
       setIsMoving(false);
       fetchInitialQuestion(nearbyNpc);
+      
+      // Reset interaction cooldown
+      setTimeout(() => {
+        setCanInteract(true);
+      }, INTERACTION_COOLDOWN);
     }
   }, [
     distance,
@@ -303,6 +344,8 @@ export function useGame({
     isSubmittingAnswer,
     fetchInitialQuestion,
     isGameFinished, // Add dependency
+    showFactoid,
+    canInteract
   ]);
 
   // Handle movement logic
@@ -314,6 +357,7 @@ export function useGame({
       isFetchingQuestion ||
       isSubmittingAnswer ||
       isGameFinished // Stop movement if game is finished
+      showFactoid  // Add this condition to prevent movement during factoid
     )
       return;
 
@@ -322,7 +366,21 @@ export function useGame({
       const moveAmount = direction * movementSpeed;
       setPosition((prev) => prev - moveAmount);
       if (direction === 1) {
-        setDistance((prev) => prev + movementSpeed);
+        setDistance((prev) => {
+          const newDistance = prev + movementSpeed;
+          
+          // Check if we've reached the factoid trigger point
+          const triggerPoint = localStorage.getItem('factoidTriggerPoint');
+          if (triggerPoint && !showFactoid) {
+            const triggerDistance = parseFloat(triggerPoint);
+            if (newDistance >= triggerDistance) {
+              setShowFactoid(true);
+              localStorage.removeItem('factoidTriggerPoint'); // Clear the trigger point
+            }
+          }
+          
+          return newDistance;
+        });
       } else if (direction === -1) {
         setDistance((prev) => Math.max(0, prev - movementSpeed));
       }
@@ -338,6 +396,7 @@ export function useGame({
     activeNpc,
     isFetchingQuestion,
     isSubmittingAnswer,
+    showFactoid,  // Add to dependencies
     movementSpeed,
     checkNpcInteractions,
     isGameFinished, // Add dependency
@@ -352,6 +411,7 @@ export function useGame({
         isFetchingQuestion ||
         isSubmittingAnswer ||
         isGameFinished // Ignore input if game is finished
+        showFactoid  // Add this condition
       )
         return;
       switch (e.key) {
@@ -393,6 +453,7 @@ export function useGame({
     isFetchingQuestion,
     isSubmittingAnswer,
     isGameFinished, // Add dependency
+    showFactoid  // Add to dependencies
   ]);
 
   // Handle mobile controls
@@ -491,6 +552,9 @@ export function useGame({
         );
         return;
       }
+      // Add additional check for existing questions
+      if (!currentQuestion || !activeNpc || isSubmittingAnswer || isFetchingQuestion || questions.length !== 1) return;
+
       setIsSubmittingAnswer(true);
       setFeedbackMessage(null);
       setFeedbackType(null);
@@ -548,6 +612,36 @@ export function useGame({
           }
           showFeedbackWithTimer(result.explanation, result.previousResponseCorrect ? "correct" : "incorrect");
         }
+
+        // --- End Interaction with this NPC (Always happens after feedback for single question) ---
+        setNpcs((prev) =>
+          prev.map((npc) =>
+            npc.id === activeNpc.id ? { ...npc, answered: true } : npc
+          )
+        );
+
+        // After successful answer processing:
+        setLastQuestion(currentQuestion.question || '');
+        setFactoid("Did you know? This is an interesting fact about the topic!");
+        
+        // Store the position where the factoid should appear
+        const nextNpc = npcs.find(npc => !npc.answered && npc.position > distance);
+        if (nextNpc) {
+          // Calculate halfway point between current position and next NPC, then add 200
+          const halfwayPoint = distance + ((nextNpc.position - distance) / 2) + 200;
+          
+          // Store this point to check against during movement
+          localStorage.setItem('factoidTriggerPoint', halfwayPoint.toString());
+        }
+
+        // Clear interaction state after feedback duration
+        setTimeout(() => {
+          setFeedbackMessage(null);
+          setFeedbackType(null);
+          setQuestions([]);
+          setActiveNpc(null);
+          setIsSubmittingAnswer(false);
+        }, feedbackDuration);
       } catch (error) {
         console.error("Error submitting answer to AI:", error);
         showFeedbackWithTimer("Error evaluating answer. Please try again.", "error");
@@ -592,6 +686,11 @@ export function useGame({
       messageHistory,
       isGameFinished,
       showFeedbackWithTimer, // Add the new callback
+      feedbackDuration,
+      messageHistory, // Keep history as dependency
+      distance, // Add distance
+      npcs,     // Add npcs
+      movementSpeed // Add movementSpeed
     ]
   );
 
@@ -610,6 +709,83 @@ export function useGame({
         screenPosition: npc.position - playerPosition,
       }));
   }, [distance, npcs]);
+
+  const handleFactoidContinue = useCallback(() => {
+    setShowFactoid(false);
+    setFactoid('');
+    
+    // Find the next NPC
+    const nextNpc = npcs.find(npc => !npc.answered && npc.position > distance);
+    
+    // If there is a next NPC, let the player continue moving
+    if (nextNpc) {
+      // The next question will be triggered automatically by proximity
+      // through the checkNpcInteractions function
+      setCanInteract(true);
+    } else {
+      // If no more NPCs, show completion message
+      setFeedbackMessage("Congratulations! You've completed all the questions!");
+      setFeedbackType("correct");
+      setTimeout(() => {
+        setFeedbackMessage(null);
+        setFeedbackType(null);
+      }, feedbackDuration);
+    }
+  }, [npcs, distance, feedbackDuration]);
+
+  // Remove the duplicate setFactoid functions and replace with a proper implementation
+  const setGameFactoid = (newFactoid: string) => {
+    setShowFactoid(true);
+    setFactoid(newFactoid);
+  };
+
+  // Fix generateNPCs function
+  const generateNPCs = () => {
+    const initialNpcs: NpcObject[] = [];
+    const spacing = 100; // Make sure this is 100
+    const startX = spacing; // Use spacing instead of npcSpawnInterval
+    
+    for (let i = 0; i < worldWidth / spacing; i++) {
+      const randomNpcType = npcTypes[Math.floor(Math.random() * npcTypes.length)];
+      initialNpcs.push({
+        id: i,
+        position: startX + (i * spacing),
+        character: randomNpcType,
+        answered: false,
+      });
+    }
+    
+    setNpcs(initialNpcs);
+  };
+
+  // Fix generateNextQuestion function
+  const generateNextQuestion = useCallback(() => {
+    // Clear the current factoid and question state
+    setFactoid('');
+    setLastQuestion('');
+    setQuestions([]);
+  
+    // Find the next unanswered NPC
+    const nextNpc = npcs.find((npc) => !npc.answered);
+  
+    if (nextNpc) {
+      // Fetch the initial question for the next NPC
+      fetchInitialQuestion(nextNpc);
+    } else {
+      setFeedbackMessage("Congratulations! You've completed all the questions.");
+      setFeedbackType("correct");
+      setTimeout(() => {
+        setFeedbackMessage(null);
+        setFeedbackType(null);
+      }, feedbackDuration);
+    }
+  }, [npcs, fetchInitialQuestion, feedbackDuration]);
+
+  useEffect(() => {
+    return () => {
+        localStorage.removeItem('factoidTriggerPoint');
+    };
+}, []);
 
   return {
     position,
@@ -635,6 +811,13 @@ export function useGame({
     answeredCount, // Expose answered count
     feedbackTimeRemaining, // Expose the timer state for the UI
     feedbackDuration, // Expose total duration for calculations
+    showFactoid,
+    factoid,
+    lastQuestion,
+    handleFactoidContinue,
+    generateNextQuestion,
+    setGameFactoid,
+    showFloatingQuestionMarks,
   };
 }
 
@@ -645,4 +828,5 @@ function triggerConfetti() {
     spread: 70,
     origin: { y: 1 },
   });
+}
 }
